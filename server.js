@@ -75,19 +75,19 @@ const RESOLUTION_PRESETS = {
 
 // Ultra low latency presets with packet dropping
 const ULTRA_LOW_LATENCY_PRESETS = {
-  '480p': { width: 854, height: 480, bitrate: '800k', fps: 30, dropThreshold: 50 },
-  '720p': { width: 1280, height: 720, bitrate: '1.5M', fps: 30, dropThreshold: 100 },
-  '360p': { width: 640, height: 360, bitrate: '400k', fps: 30, dropThreshold: 30 },
-  '240p': { width: 426, height: 240, bitrate: '200k', fps: 30, dropThreshold: 20 }
+  '480p': { width: 854, height: 480, bitrate: '600k', fps: 25, dropThreshold: 50 },
+  '720p': { width: 1280, height: 720, bitrate: '1M', fps: 25, dropThreshold: 100 },
+  '360p': { width: 640, height: 360, bitrate: '300k', fps: 25, dropThreshold: 30 },
+  '240p': { width: 426, height: 240, bitrate: '150k', fps: 20, dropThreshold: 20 }
 };
 
 // EXTREME low latency presets - 極限設定
 const EXTREME_LOW_LATENCY_PRESETS = {
-  '480p': { width: 854, height: 480, bitrate: '600k', fps: 15, dropThreshold: 100 },
-  '720p': { width: 1280, height: 720, bitrate: '1M', fps: 15, dropThreshold: 200 },
-  '360p': { width: 640, height: 360, bitrate: '300k', fps: 15, dropThreshold: 50 },
-  '240p': { width: 426, height: 240, bitrate: '150k', fps: 10, dropThreshold: 30 },
-  '180p': { width: 320, height: 180, bitrate: '100k', fps: 10, dropThreshold: 20 }
+  '480p': { width: 854, height: 480, bitrate: '400k', fps: 15, dropThreshold: 100 },
+  '720p': { width: 1280, height: 720, bitrate: '600k', fps: 15, dropThreshold: 200 },
+  '360p': { width: 640, height: 360, bitrate: '200k', fps: 15, dropThreshold: 50 },
+  '240p': { width: 426, height: 240, bitrate: '100k', fps: 10, dropThreshold: 30 },
+  '180p': { width: 320, height: 180, bitrate: '80k', fps: 10, dropThreshold: 20 }
 };
 
 
@@ -112,22 +112,22 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   const inputUrl = `rtmp://localhost:1935/live/${streamKey}`;
   const outputUrl = `rtmp://localhost:1935/live/${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}${extremeMode ? '_extreme' : ''}`;
 
-  // Base FFmpeg arguments
+  // Base FFmpeg arguments with more extreme quality differences
   const ffmpegArgs = [
     '-i', inputUrl,
     '-c:v', 'libx264',
     '-preset', extremeMode ? 'superfast' : (ultraLowLatency ? 'superfast' : 'ultrafast'),
     '-tune', 'zerolatency',
-    '-crf', extremeMode ? '32' : (ultraLowLatency ? '28' : '23'),
+    '-crf', extremeMode ? '40' : (ultraLowLatency ? '32' : '18'), // More extreme CRF differences
     '-maxrate', preset.bitrate,
-    '-bufsize', extremeMode ? '200k' : (ultraLowLatency ? '500k' : '1M'),
-    '-g', extremeMode ? '10' : (ultraLowLatency ? '15' : '30'), // Even smaller GOP for extreme
-    '-keyint_min', extremeMode ? '10' : (ultraLowLatency ? '15' : '30'),
+    '-bufsize', extremeMode ? '100k' : (ultraLowLatency ? '300k' : '2M'), // More extreme buffer differences
+    '-g', extremeMode ? '8' : (ultraLowLatency ? '12' : '60'), // More extreme GOP differences
+    '-keyint_min', extremeMode ? '8' : (ultraLowLatency ? '12' : '60'),
     '-r', preset.fps.toString(),
     '-s', `${preset.width}x${preset.height}`,
     '-c:a', 'aac',
-    '-b:a', extremeMode ? '32k' : (ultraLowLatency ? '64k' : '128k'),
-    '-ar', '22050', // Lower sample rate for extreme mode
+    '-b:a', extremeMode ? '16k' : (ultraLowLatency ? '48k' : '128k'), // More extreme audio differences
+    '-ar', extremeMode ? '16000' : (ultraLowLatency ? '22050' : '44100'), // More extreme sample rate differences
     '-f', 'flv'
   ];
 
@@ -162,7 +162,18 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
 
   ffmpegArgs.push(outputUrl);
 
-  const modeName = extremeMode ? 'EXTREME' : (ultraLowLatency ? 'ULTRA' : '');
+  const modeName = extremeMode ? 'EXTREME' : (ultraLowLatency ? 'ULTRA' : 'STANDARD');
+  
+  // Log detailed FFmpeg settings for debugging
+  console.log(`=== ${modeName} MODE SETTINGS ===`);
+  console.log(`Resolution: ${preset.width}x${preset.height}`);
+  console.log(`Bitrate: ${preset.bitrate}`);
+  console.log(`FPS: ${preset.fps}`);
+  console.log(`CRF: ${extremeMode ? '40' : (ultraLowLatency ? '32' : '18')}`);
+  console.log(`Buffer: ${extremeMode ? '100k' : (ultraLowLatency ? '300k' : '2M')}`);
+  console.log(`GOP: ${extremeMode ? '8' : (ultraLowLatency ? '12' : '60')}`);
+  console.log(`Audio: ${extremeMode ? '16k/16kHz' : (ultraLowLatency ? '48k/22kHz' : '128k/44kHz')}`);
+  console.log(`FFmpeg Command: ${ffmpegPath} ${ffmpegArgs.join(' ')}`);
   console.log(`Starting ${modeName} low latency stream: ${streamKey} → ${resolution}`);
   
   const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);

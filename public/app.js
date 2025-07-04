@@ -53,11 +53,11 @@ async function playStream() {
         
         currentResolutionElement.textContent = resolution.toUpperCase();
         if (isExtreme) {
-            latencyModeElement.textContent = '極限低遅延';
+            latencyModeElement.textContent = '極限低遅延 (最低画質)';
         } else if (isUltra) {
-            latencyModeElement.textContent = '超低遅延';
+            latencyModeElement.textContent = '超低遅延 (低画質)';
         } else {
-            latencyModeElement.textContent = '低遅延';
+            latencyModeElement.textContent = '低遅延 (中画質)';
         }
         
         try {
