@@ -46,21 +46,30 @@ async function playStream() {
             startNewStream(streamUrl);
         }, 200);
     } else {
-        // Parse mode: low_720p, ultra_360p, etc.
+        // Parse mode: low_720p, ultra_360p, extreme_240p, etc.
         const [latencyType, resolution] = mode.split('_');
         const isUltra = latencyType === 'ultra';
+        const isExtreme = latencyType === 'extreme';
         
         currentResolutionElement.textContent = resolution.toUpperCase();
-        latencyModeElement.textContent = isUltra ? '超低遅延' : '低遅延';
+        if (isExtreme) {
+            latencyModeElement.textContent = '極限低遅延';
+        } else if (isUltra) {
+            latencyModeElement.textContent = '超低遅延';
+        } else {
+            latencyModeElement.textContent = '低遅延';
+        }
         
         try {
             // Start latency mode and wait for it to be ready
-            const success = await startLatencyMode(currentStreamKey, resolution, isUltra);
+            const success = await startLatencyMode(currentStreamKey, resolution, isUltra, isExtreme);
             
             if (success) {
                 // Wait longer for FFmpeg to start processing
                 setTimeout(() => {
-                    const suffix = isUltra ? '_ultra' : '';
+                    let suffix = '';
+                    if (isExtreme) suffix = '_extreme';
+                    else if (isUltra) suffix = '_ultra';
                     actualStreamKey = `${currentStreamKey}_${resolution}${suffix}`;
                     streamUrl = `http://${window.location.hostname}:8000/live/${actualStreamKey}.flv`;
                     startNewStream(streamUrl);
@@ -188,17 +197,30 @@ modeSelect.addEventListener('change', onModeChange);
 
 
 // Unified latency mode function
-async function startLatencyMode(streamKey, resolution, isUltra) {
+async function startLatencyMode(streamKey, resolution, isUltra, isExtreme) {
     try {
-        const ultraParam = isUltra ? '?ultra=true' : '';
-        const response = await fetch(`/api/stream/low-latency/${streamKey}/${resolution}${ultraParam}`, {
+        let params = '';
+        if (isExtreme) {
+            params = '?extreme=true';
+        } else if (isUltra) {
+            params = '?ultra=true';
+        }
+        
+        const response = await fetch(`/api/stream/low-latency/${streamKey}/${resolution}${params}`, {
             method: 'POST'
         });
         
         const result = await response.json();
         
         if (response.ok) {
-            const mode = isUltra ? '超低遅延' : '低遅延';
+            let mode;
+            if (isExtreme) {
+                mode = '極限低遅延';
+            } else if (isUltra) {
+                mode = '超低遅延';
+            } else {
+                mode = '低遅延';
+            }
             updateStatus(`${mode}モード開始: ${resolution}`, 'connected');
             return true;
         } else {

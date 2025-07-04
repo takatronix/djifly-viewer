@@ -81,43 +81,58 @@ const ULTRA_LOW_LATENCY_PRESETS = {
   '240p': { width: 426, height: 240, bitrate: '200k', fps: 30, dropThreshold: 20 }
 };
 
+// EXTREME low latency presets - 極限設定
+const EXTREME_LOW_LATENCY_PRESETS = {
+  '480p': { width: 854, height: 480, bitrate: '600k', fps: 15, dropThreshold: 100 },
+  '720p': { width: 1280, height: 720, bitrate: '1M', fps: 15, dropThreshold: 200 },
+  '360p': { width: 640, height: 360, bitrate: '300k', fps: 15, dropThreshold: 50 },
+  '240p': { width: 426, height: 240, bitrate: '150k', fps: 10, dropThreshold: 30 },
+  '180p': { width: 320, height: 180, bitrate: '100k', fps: 10, dropThreshold: 20 }
+};
+
 
 // Start low-latency stream with resolution conversion
-function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false) {
+function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, extremeMode = false) {
   if (resolutionProcesses.has(streamKey)) {
     console.log(`Low latency stream already running for: ${streamKey}`);
     return;
   }
 
-  const preset = ultraLowLatency ? ULTRA_LOW_LATENCY_PRESETS[resolution] : RESOLUTION_PRESETS[resolution];
+  let preset;
+  if (extremeMode) {
+    preset = EXTREME_LOW_LATENCY_PRESETS[resolution];
+  } else {
+    preset = ultraLowLatency ? ULTRA_LOW_LATENCY_PRESETS[resolution] : RESOLUTION_PRESETS[resolution];
+  }
+  
   if (!preset) {
     throw new Error(`Invalid resolution preset: ${resolution}`);
   }
 
   const inputUrl = `rtmp://localhost:1935/live/${streamKey}`;
-  const outputUrl = `rtmp://localhost:1935/live/${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}`;
+  const outputUrl = `rtmp://localhost:1935/live/${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}${extremeMode ? '_extreme' : ''}`;
 
-  // Ultra low latency FFmpeg arguments with packet dropping
+  // Base FFmpeg arguments
   const ffmpegArgs = [
     '-i', inputUrl,
     '-c:v', 'libx264',
-    '-preset', ultraLowLatency ? 'superfast' : 'ultrafast',
+    '-preset', extremeMode ? 'superfast' : (ultraLowLatency ? 'superfast' : 'ultrafast'),
     '-tune', 'zerolatency',
-    '-crf', ultraLowLatency ? '28' : '23',
+    '-crf', extremeMode ? '32' : (ultraLowLatency ? '28' : '23'),
     '-maxrate', preset.bitrate,
-    '-bufsize', ultraLowLatency ? '500k' : '1M',
-    '-g', ultraLowLatency ? '15' : '30', // Smaller GOP for ultra low latency
-    '-keyint_min', ultraLowLatency ? '15' : '30',
+    '-bufsize', extremeMode ? '200k' : (ultraLowLatency ? '500k' : '1M'),
+    '-g', extremeMode ? '10' : (ultraLowLatency ? '15' : '30'), // Even smaller GOP for extreme
+    '-keyint_min', extremeMode ? '10' : (ultraLowLatency ? '15' : '30'),
     '-r', preset.fps.toString(),
     '-s', `${preset.width}x${preset.height}`,
     '-c:a', 'aac',
-    '-b:a', ultraLowLatency ? '64k' : '128k',
-    '-ar', '44100',
+    '-b:a', extremeMode ? '32k' : (ultraLowLatency ? '64k' : '128k'),
+    '-ar', '22050', // Lower sample rate for extreme mode
     '-f', 'flv'
   ];
 
   // Add ultra low latency specific options
-  if (ultraLowLatency) {
+  if (ultraLowLatency || extremeMode) {
     ffmpegArgs.push(
       '-fflags', '+nobuffer+fastseek+flush_packets',
       '-flags', '+low_delay',
@@ -128,9 +143,27 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false) {
     );
   }
 
+  // Add extreme mode specific options
+  if (extremeMode) {
+    ffmpegArgs.push(
+      '-fflags', '+nobuffer+fastseek+flush_packets+discardcorrupt',
+      '-flags', '+low_delay',
+      '-framedrop', '1',
+      '-sync', 'ext',
+      '-threads', '1', // Single thread for minimal latency
+      '-probesize', '32', // Minimal probe size
+      '-analyzeduration', '0', // No analysis delay
+      '-fflags', '+nobuffer+fastseek+flush_packets+discardcorrupt+genpts',
+      '-avoid_negative_ts', 'disabled',
+      '-max_delay', '0',
+      '-max_interleave_delta', '0'
+    );
+  }
+
   ffmpegArgs.push(outputUrl);
 
-  console.log(`Starting ${ultraLowLatency ? 'ULTRA' : ''} low latency stream: ${streamKey} → ${resolution}`);
+  const modeName = extremeMode ? 'EXTREME' : (ultraLowLatency ? 'ULTRA' : '');
+  console.log(`Starting ${modeName} low latency stream: ${streamKey} → ${resolution}`);
   
   const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);
   
@@ -155,8 +188,9 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false) {
   resolutionProcesses.set(streamKey, {
     process: ffmpegProcess,
     resolution: resolution,
-    outputStream: `${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}`,
-    ultraLowLatency: ultraLowLatency
+    outputStream: `${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}${extremeMode ? '_extreme' : ''}`,
+    ultraLowLatency: ultraLowLatency,
+    extremeMode: extremeMode
   });
 }
 
@@ -193,23 +227,34 @@ app.get('/api/streams', (req, res) => {
 // API endpoint to start low-latency stream with resolution conversion
 app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
   const { streamKey, resolution } = req.params;
-  const { ultra } = req.query; // ?ultra=true for ultra low latency
+  const { ultra, extreme } = req.query; // ?ultra=true for ultra low latency, ?extreme=true for extreme mode
   
-  console.log(`Low latency request: streamKey=${streamKey}, resolution=${resolution}, ultra=${ultra}`);
+  console.log(`Low latency request: streamKey=${streamKey}, resolution=${resolution}, ultra=${ultra}, extreme=${extreme}`);
   console.log('Active streams:', Array.from(activeStreams.keys()));
   
   if (!activeStreams.has(streamKey)) {
     return res.status(404).json({ error: 'Stream not found' });
   }
   
-  const presets = ultra === 'true' ? ULTRA_LOW_LATENCY_PRESETS : RESOLUTION_PRESETS;
+  let presets;
+  let mode;
+  if (extreme === 'true') {
+    presets = EXTREME_LOW_LATENCY_PRESETS;
+    mode = 'EXTREME low latency';
+  } else if (ultra === 'true') {
+    presets = ULTRA_LOW_LATENCY_PRESETS;
+    mode = 'ULTRA low latency';
+  } else {
+    presets = RESOLUTION_PRESETS;
+    mode = 'Low latency';
+  }
+  
   if (!presets[resolution]) {
     return res.status(400).json({ error: 'Invalid resolution preset' });
   }
   
   try {
-    startLowLatencyStream(streamKey, resolution, ultra === 'true');
-    const mode = ultra === 'true' ? 'ULTRA low latency' : 'Low latency';
+    startLowLatencyStream(streamKey, resolution, ultra === 'true', extreme === 'true');
     res.json({ success: true, message: `${mode} stream started: ${streamKey} at ${resolution}` });
   } catch (error) {
     res.status(500).json({ error: error.message });
