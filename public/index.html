@@ -8,40 +8,23 @@
 </head>
 <body>
     <div class="container">
-        <h1><img src="icon.png" alt="DJI Icon" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 10px;">DJI Fly Stream Viewer</h1>
-        
-        <div class="main-controls">
-            <div class="compact-controls">
-                <select id="modeSelect">
-                    <option value="original">🎥 標準品質 (1080p)</option>
-                    <option value="low_720p">⚡ 低遅延 720p</option>
-                    <option value="low_480p">⚡ 低遅延 480p</option>
-                    <option value="ultra_360p">🚀 超低遅延 360p</option>
-                    <option value="extreme_240p">💥 極限低遅延 240p</option>
-                    <option value="extreme_180p">💥 極限低遅延 180p</option>
-                </select>
-                
-
-                <button id="djiGoggles3Btn" class="dji-button">⚙️ 接続方法</button>
-            </div>
+        <div class="header-row" style="display: flex; align-items: center; justify-content: space-between;">
+            <h1 style="margin: 0 auto; display: flex; align-items: center; justify-content: center; flex: 1; text-align: center;">
+                <img src="icon.png" alt="DJI Icon" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 10px;">DJI Fly Stream Viewer
+            </h1>
+            <button id="djiGoggles3Btn" class="dji-button" style="margin-left: auto;">⚙️ 接続方法</button>
         </div>
-
-        <div class="stream-status">
-            <div class="status-item">
-                <span class="label">状態:</span>
-                <span id="status" class="value">未接続</span>
-            </div>
-            <div class="status-item">
-                <span class="label">モード:</span>
-                <span id="latencyMode" class="value">標準</span>
-                <span class="separator">•</span>
-                <span id="currentResolution" class="value">オリジナル</span>
-            </div>
-            <div class="status-item rtmp-url">
-                <span class="label">RTMP URL:</span>
-                <code id="rtmpUrl" onclick="copyRtmpUrl()">読み込み中...</code>
-                <button class="help-button" id="rtmpHelp" title="RTMP URLのヘルプ">?</button>
-            </div>
+        <div class="controls-row status-group">
+            <select id="modeSelect">
+                <option value="original">🎥 標準品質 (1080p)</option>
+                <option value="low_720p">⚡ 低遅延 720p</option>
+                <option value="low_480p">⚡ 低遅延 480p</option>
+            </select>
+            <span class="label">状態:</span>
+            <span id="status" class="value">未接続</span>
+            <span class="label">RTMP URL:</span>
+            <code id="rtmpUrl" onclick="copyRtmpUrl()" style="border: 2px solid #1976d2; background: #e3f2fd; color: #0d47a1; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 1.05em; cursor: pointer;">読み込み中...</code>
+            <button class="help-button" id="rtmpHelp" title="RTMP URLのヘルプ">?</button>
         </div>
 
         <div class="video-container">

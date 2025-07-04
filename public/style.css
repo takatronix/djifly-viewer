@@ -301,8 +301,9 @@ h1 {
     transform: scale(1.02);
 }
 
-#status.connected {
-    color: #4aff4a;
+#status.connected, #status.stable {
+    color: #2ecc40;
+    font-weight: bold;
 }
 
 #status.error {
@@ -482,4 +483,36 @@ h1 {
 /* メインコンテナの下部マージンを追加 */
 body {
     padding-bottom: 220px; /* ログパネル分のスペース */
+}
+
+.status-group {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin-top: 10px;
+    font-size: 0.85em;
+    background: linear-gradient(135deg, #23272f 60%, #1a1a1a 100%);
+    border-radius: 10px;
+    padding: 10px 18px;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10);
+}
+
+.status-group select,
+.status-group .label,
+.status-group .value,
+.status-group .separator,
+.status-group code,
+.status-group button {
+    font-size: 0.95em;
+}
+
+.status-group select {
+    min-width: 120px;
+    font-size: 0.95em;
+    padding: 4px 10px;
+}
+
+.status-group code {
+    font-size: 0.95em;
+    padding: 2px 6px;
 }

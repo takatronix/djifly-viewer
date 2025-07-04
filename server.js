@@ -76,18 +76,13 @@ const RESOLUTION_PRESETS = {
 // Ultra low latency presets with packet dropping
 const ULTRA_LOW_LATENCY_PRESETS = {
   '480p': { width: 480, height: 270, bitrate: '300k', fps: 20, dropThreshold: 50 },
-  '720p': { width: 640, height: 360, bitrate: '400k', fps: 20, dropThreshold: 100 },
-  '360p': { width: 320, height: 180, bitrate: '150k', fps: 15, dropThreshold: 30 },
-  '240p': { width: 240, height: 135, bitrate: '80k', fps: 10, dropThreshold: 20 }
+  '720p': { width: 640, height: 360, bitrate: '400k', fps: 20, dropThreshold: 100 }
 };
 
 // EXTREME low latency presets - 極限設定
 const EXTREME_LOW_LATENCY_PRESETS = {
   '480p': { width: 320, height: 180, bitrate: '150k', fps: 10, dropThreshold: 100 },
-  '720p': { width: 480, height: 270, bitrate: '200k', fps: 10, dropThreshold: 200 },
-  '360p': { width: 240, height: 135, bitrate: '100k', fps: 8, dropThreshold: 50 },
-  '240p': { width: 160, height: 90, bitrate: '60k', fps: 5, dropThreshold: 30 },
-  '180p': { width: 120, height: 68, bitrate: '40k', fps: 5, dropThreshold: 20 }
+  '720p': { width: 480, height: 270, bitrate: '200k', fps: 10, dropThreshold: 200 }
 };
 
 
@@ -183,7 +178,7 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   ffmpegProcess.stderr.on('data', (data) => {
     const dataStr = data.toString();
     console.log(`Low latency ${streamKey} stderr: ${dataStr}`);
-    addLog('info', `FFmpeg ${streamKey}: ${dataStr}`);
+    // addLog('info', `FFmpeg ${streamKey}: ${dataStr}`); // ログ肥大化防止のためコメントアウト
   });
 
   ffmpegProcess.on('close', (code) => {
@@ -529,8 +524,16 @@ console.log('RTMP Server running on port 1935');
 console.log('HTTP-FLV/HLS/DASH Server running on port 8000');
 console.log(`Stream with: rtmp://${localIP}/live/STREAM_KEY`);
 
-process.on('SIGINT', () => {
-  console.log('\nShutting down servers...');
-  nms.stop();
-  process.exit(0);
-});
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
+function cleanup() {
+  for (const proc of resolutionProcesses.values()) {
+    try {
+      proc.process.kill('SIGKILL');
+    } catch (e) {
+      console.error('Failed to kill ffmpeg process:', e);
+    }
+  }
+  process.exit();
+}

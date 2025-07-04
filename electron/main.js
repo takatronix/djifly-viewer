@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
+const { exec } = require('child_process');
 
 let mainWindow;
 let serverStarted = false;
@@ -171,4 +172,12 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
     // Cleanup if needed
+    // ffmpegプロセスを全てkill
+    exec('pkill -f "ffmpeg.*rtmp"', (err) => {
+        if (err) console.error('ffmpeg kill error:', err);
+    });
+    // NodeMediaServerもkill（必要なら）
+    exec('pkill -f "node.*server.js"', (err) => {
+        if (err) console.error('server.js kill error:', err);
+    });
 });
