@@ -304,14 +304,14 @@ app.get('/api/resolutions', (req, res) => {
   res.json(Object.keys(RESOLUTION_PRESETS));
 });
 
-const webPort = 8080;
+const webPort = 8081;
 
 // Get server info including local IP
 app.get('/api/server-info', (req, res) => {
   res.json({
     localIP: localIP,
     rtmpPort: 1935,
-    webPort: webPort,
+    webPort: 8080,
     httpPort: 8000
   });
 });
@@ -345,6 +345,8 @@ function getLocalIP() {
 const localIP = getLocalIP();
 
 app.listen(webPort, '0.0.0.0', () => {
+  addLog('success', `Webサーバー起動: http://${localIP}:${webPort}`);
+  addLog('info', `ローカルアクセス: http://localhost:${webPort}`);
   console.log(`Web server running at http://${localIP}:${webPort}`);
   console.log(`Also accessible at http://localhost:${webPort}`);
 });
@@ -427,6 +429,10 @@ nms.on('donePlay', (id, StreamPath, args) => {
 });
 
 nms.run();
+
+addLog('success', 'RTMPサーバー起動: ポート1935');
+addLog('success', 'HTTP-FLV/HLS/DASHサーバー起動: ポート8000');
+addLog('info', `配信URL: rtmp://${localIP}/live/STREAM_KEY`);
 
 console.log('RTMP Server running on port 1935');
 console.log('HTTP-FLV/HLS/DASH Server running on port 8000');

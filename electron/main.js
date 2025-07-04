@@ -212,6 +212,47 @@ function startServer() {
             });
         });
         
+        // Add logs API proxy
+        expressApp.get('/api/logs', async (req, res) => {
+            try {
+                // Forward to the actual server running on port 8081 (where server.js runs)
+                const http = require('http');
+                const queryString = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+                
+                const options = {
+                    hostname: 'localhost',
+                    port: 8081,
+                    path: `/api/logs${queryString}`,
+                    method: 'GET'
+                };
+                
+                const proxyReq = http.request(options, (proxyRes) => {
+                    let data = '';
+                    proxyRes.on('data', (chunk) => {
+                        data += chunk;
+                    });
+                    proxyRes.on('end', () => {
+                        try {
+                            const logs = JSON.parse(data);
+                            res.json(logs);
+                        } catch (e) {
+                            res.json([]);
+                        }
+                    });
+                });
+                
+                proxyReq.on('error', (error) => {
+                    console.error('Failed to fetch logs:', error);
+                    res.json([]);
+                });
+                
+                proxyReq.end();
+            } catch (error) {
+                console.error('Failed to fetch logs:', error);
+                res.json([]);
+            }
+        });
+        
         server = expressApp.listen(8080, () => {
             console.log(`RTMP Viewer server started on port 8080`);
             console.log(`Web interface: http://${localIP}:8080`);
