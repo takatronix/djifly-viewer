@@ -10,6 +10,7 @@ const express = require('express');
 let nms;
 let expressApp;
 let server;
+let serverProcess;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -129,6 +130,25 @@ app.on('before-quit', () => {
 
 function startServer() {
     try {
+        // Start server.js as a child process
+        const { spawn } = require('child_process');
+        const path = require('path');
+        
+        const serverPath = path.join(__dirname, '../server.js');
+        console.log('Starting server.js at:', serverPath);
+        
+        serverProcess = spawn('node', [serverPath], {
+            stdio: 'inherit'
+        });
+        
+        serverProcess.on('error', (error) => {
+            console.error('Server process error:', error);
+        });
+        
+        serverProcess.on('exit', (code) => {
+            console.log(`Server process exited with code ${code}`);
+        });
+        
         // Get local IP dynamically
         function getLocalIP() {
             const interfaces = require('os').networkInterfaces();
@@ -267,6 +287,10 @@ function startServer() {
 }
 
 function stopServer() {
+    if (serverProcess) {
+        serverProcess.kill();
+        serverProcess = null;
+    }
     if (nms) {
         nms.stop();
         nms = null;
