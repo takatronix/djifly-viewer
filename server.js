@@ -118,11 +118,11 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
     '-c:v', 'libx264',
     '-preset', extremeMode ? 'superfast' : (ultraLowLatency ? 'superfast' : 'ultrafast'),
     '-tune', 'zerolatency',
-    '-crf', extremeMode ? '40' : (ultraLowLatency ? '32' : '18'), // More extreme CRF differences
+    '-crf', extremeMode ? '40' : (ultraLowLatency ? '32' : '25'), // Lower quality for low latency mode too
     '-maxrate', preset.bitrate,
-    '-bufsize', extremeMode ? '100k' : (ultraLowLatency ? '300k' : '2M'), // More extreme buffer differences
-    '-g', extremeMode ? '8' : (ultraLowLatency ? '12' : '60'), // More extreme GOP differences
-    '-keyint_min', extremeMode ? '8' : (ultraLowLatency ? '12' : '60'),
+    '-bufsize', extremeMode ? '100k' : (ultraLowLatency ? '300k' : '1M'), // Smaller buffer for low latency
+    '-g', extremeMode ? '8' : (ultraLowLatency ? '12' : '30'), // Smaller GOP for low latency
+    '-keyint_min', extremeMode ? '8' : (ultraLowLatency ? '12' : '30'),
     '-r', preset.fps.toString(),
     '-s', `${preset.width}x${preset.height}`,
     '-an', // Disable audio completely
@@ -167,9 +167,9 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   console.log(`Resolution: ${preset.width}x${preset.height} (${resolution})`);
   console.log(`Bitrate: ${preset.bitrate}`);
   console.log(`FPS: ${preset.fps}`);
-  console.log(`CRF: ${extremeMode ? '40' : (ultraLowLatency ? '32' : '18')}`);
-  console.log(`Buffer: ${extremeMode ? '100k' : (ultraLowLatency ? '300k' : '2M')}`);
-  console.log(`GOP: ${extremeMode ? '8' : (ultraLowLatency ? '12' : '60')}`);
+  console.log(`CRF: ${extremeMode ? '40' : (ultraLowLatency ? '32' : '25')}`);
+  console.log(`Buffer: ${extremeMode ? '100k' : (ultraLowLatency ? '300k' : '1M')}`);
+  console.log(`GOP: ${extremeMode ? '8' : (ultraLowLatency ? '12' : '30')}`);
   console.log(`Audio: DISABLED (-an)`);
   console.log(`FFmpeg Command: ${ffmpegPath} ${ffmpegArgs.join(' ')}`);
   console.log(`Starting ${modeName} low latency stream: ${streamKey} → ${resolution}`);
@@ -254,6 +254,7 @@ app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
     presets = ULTRA_LOW_LATENCY_PRESETS;
     mode = 'ULTRA low latency';
   } else {
+    // For low latency mode (low_), use RESOLUTION_PRESETS with lower quality settings
     presets = RESOLUTION_PRESETS;
     mode = 'Low latency';
   }

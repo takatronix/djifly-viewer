@@ -204,7 +204,12 @@ async function startLatencyMode(streamKey, resolution, isUltra, isExtreme) {
             params = '?extreme=true';
         } else if (isUltra) {
             params = '?ultra=true';
+        } else {
+            // For low latency mode (low_), no special params needed
+            params = '';
         }
+        
+        console.log(`Starting latency mode: streamKey=${streamKey}, resolution=${resolution}, isUltra=${isUltra}, isExtreme=${isExtreme}`);
         
         const response = await fetch(`/api/stream/low-latency/${streamKey}/${resolution}${params}`, {
             method: 'POST'
