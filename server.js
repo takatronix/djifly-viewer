@@ -31,6 +31,7 @@ const config = {
 const nms = new NodeMediaServer(config);
 
 const app = express();
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/live', express.static(path.join(__dirname, 'media/live')));
 
@@ -39,6 +40,29 @@ const activeStreams = new Map();
 
 // Store resolution conversion processes
 const resolutionProcesses = new Map();
+
+// Store logs
+const logs = [];
+const MAX_LOGS = 1000;
+
+// Log helper function
+function addLog(type, message) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    type: type,
+    message: message
+  };
+  
+  logs.push(logEntry);
+  
+  // Keep only recent logs
+  if (logs.length > MAX_LOGS) {
+    logs.shift();
+  }
+  
+  // Also log to console
+  console.log(`[${type.toUpperCase()}] ${message}`);
+}
 
 // Resolution presets for low latency
 const RESOLUTION_PRESETS = {
@@ -159,6 +183,9 @@ app.get('/api/streams', (req, res) => {
 app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
   const { streamKey, resolution } = req.params;
   const { ultra } = req.query; // ?ultra=true for ultra low latency
+  
+  console.log(`Low latency request: streamKey=${streamKey}, resolution=${resolution}, ultra=${ultra}`);
+  console.log('Active streams:', Array.from(activeStreams.keys()));
   
   if (!activeStreams.has(streamKey)) {
     return res.status(404).json({ error: 'Stream not found' });
@@ -289,6 +316,19 @@ app.get('/api/server-info', (req, res) => {
   });
 });
 
+// Get logs API
+app.get('/api/logs', (req, res) => {
+  const since = req.query.since;
+  if (since) {
+    // Return logs after specific timestamp
+    const filteredLogs = logs.filter(log => log.timestamp > since);
+    res.json(filteredLogs);
+  } else {
+    // Return all logs
+    res.json(logs);
+  }
+});
+
 // Get local IP dynamically
 function getLocalIP() {
   const interfaces = require('os').networkInterfaces();
@@ -322,11 +362,11 @@ nms.on('doneConnect', (id, args) => {
 });
 
 nms.on('prePublish', (id, StreamPath, args) => {
-  console.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+  addLog('info', `[RTMP] 配信準備中: id=${id} StreamPath=${StreamPath}`);
 });
 
 nms.on('postPublish', (id, StreamPath, args) => {
-  console.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
+  addLog('success', `[RTMP] 配信開始: id=${id} StreamPath=${StreamPath}`);
   // Extract stream key from path - support multiple formats
   let match = /\/live\/(.+)/.exec(StreamPath);
   if (!match) {
@@ -337,16 +377,16 @@ nms.on('postPublish', (id, StreamPath, args) => {
   }
   
   // Debug log to see what we're getting
-  console.log(`DEBUG: StreamPath="${StreamPath}", match=${match ? match[1] : 'null'}`);
+  addLog('info', `[DEBUG] StreamPath="${StreamPath}", match=${match ? match[1] : 'null'}`);
   
   // Handle specific cases where stream key might be incorrect
   if (match && match[1] === 'lives') {
-    console.log('Converting "lives" to "s" for compatibility');
+    addLog('warning', 'Converting "lives" to "s" for compatibility');
     match[1] = 's';
   }
   if (match) {
     const streamKey = match[1];
-    console.log(`Extracted stream key: ${streamKey} from path: ${StreamPath}`);
+    addLog('success', `[RTMP] ストリームキー登録: ${streamKey}`);
     activeStreams.set(streamKey, { id, viewers: 0 });
   }
 });

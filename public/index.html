@@ -49,7 +49,7 @@
             </div>
             <div class="status-item rtmp-url">
                 <span class="label">RTMP URL:</span>
-                <code id="rtmpUrl" onclick="copyRtmpUrl()">rtmp://localhost/live/s</code>
+                <code id="rtmpUrl" onclick="copyRtmpUrl()">読み込み中...</code>
                 <button class="help-button" id="rtmpHelp" title="RTMP URLのヘルプ">?</button>
             </div>
         </div>
@@ -62,6 +62,19 @@
             <h3>アクティブストリーム</h3>
             <ul id="streamList"></ul>
         </div>
+    </div>
+
+    <!-- ログパネル -->
+    <div id="logPanel" class="log-panel">
+        <div class="log-header">
+            <span>📋 システムログ</span>
+            <div class="log-controls">
+                <button id="clearLogBtn" title="ログをクリア">🗑️</button>
+                <button id="toggleLogBtn" title="ログパネルを折りたたむ">▼</button>
+            </div>
+        </div>
+        <div id="logContent" class="log-content"></div>
+        <div id="logResizer" class="log-resizer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>

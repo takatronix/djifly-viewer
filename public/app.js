@@ -390,6 +390,95 @@ fetchServerInfo();
 updateStreamList();
 checkAndAutoConnect();
 
+// Log panel functionality
+const logPanel = document.getElementById('logPanel');
+const logContent = document.getElementById('logContent');
+const toggleLogBtn = document.getElementById('toggleLogBtn');
+const clearLogBtn = document.getElementById('clearLogBtn');
+const logResizer = document.getElementById('logResizer');
+
+let isLogCollapsed = false;
+let lastLogTimestamp = null;
+
+// Toggle log panel
+toggleLogBtn.addEventListener('click', () => {
+    isLogCollapsed = !isLogCollapsed;
+    logPanel.classList.toggle('collapsed', isLogCollapsed);
+    toggleLogBtn.textContent = isLogCollapsed ? '▲' : '▼';
+});
+
+// Clear logs
+clearLogBtn.addEventListener('click', () => {
+    logContent.innerHTML = '';
+});
+
+// Add log entry to panel
+function addLogEntry(type, message, timestamp) {
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    
+    const time = new Date(timestamp).toLocaleTimeString();
+    entry.innerHTML = `<span class="log-timestamp">${time}</span>${message}`;
+    
+    logContent.appendChild(entry);
+    // Auto-scroll to bottom
+    logContent.scrollTop = logContent.scrollHeight;
+}
+
+// Fetch and update logs
+async function updateLogs() {
+    try {
+        const url = lastLogTimestamp 
+            ? `/api/logs?since=${lastLogTimestamp}`
+            : '/api/logs';
+            
+        const response = await fetch(url);
+        const logs = await response.json();
+        
+        logs.forEach(log => {
+            addLogEntry(log.type, log.message, log.timestamp);
+            lastLogTimestamp = log.timestamp;
+        });
+    } catch (error) {
+        console.error('Failed to fetch logs:', error);
+    }
+}
+
+// Update logs every 2 seconds
+setInterval(updateLogs, 2000);
+
+// Resize functionality
+let isResizing = false;
+let startY = 0;
+let startHeight = 0;
+
+logResizer.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    startY = e.clientY;
+    startHeight = logPanel.offsetHeight;
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    
+    const deltaY = startY - e.clientY;
+    const newHeight = Math.min(Math.max(startHeight + deltaY, 35), window.innerHeight * 0.8);
+    logPanel.style.height = `${newHeight}px`;
+    
+    // Update body padding
+    document.body.style.paddingBottom = `${newHeight + 20}px`;
+});
+
+document.addEventListener('mouseup', () => {
+    isResizing = false;
+    document.body.style.cursor = '';
+});
+
+// Initial log fetch
+updateLogs();
+
 // Update RTMP URL display
 function updateRtmpUrl() {
     const streamKey = streamSelect.value || 's';

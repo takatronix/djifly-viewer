@@ -1,0 +1,148 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.1)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        
+    steps:
+    - name: Check out Git repository
+      uses: actions/checkout@v3
+      
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build Electron app
+      run: |
+        if [ "${{ matrix.os }}" == "macos-latest" ]; then
+          npm run build-mac
+        elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+          npm run build-win
+        else
+          npm run build-linux
+        fi
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-build
+        path: |
+          dist/*.dmg
+          dist/*.exe
+          dist/*.AppImage
+          dist/*.blockmap
+          dist/*.yml
+          
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check out Git repository
+      uses: actions/checkout@v3
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+        release_name: Release ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+        body: |
+          ## 🚁 DJI Fly Stream Viewer ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+          
+          ### 📦 ダウンロード
+          
+          #### macOS
+          - **Intel Mac**: `DJI Fly Stream Viewer-*.dmg`
+          - **Apple Silicon (M1/M2/M3)**: `DJI Fly Stream Viewer-*-arm64.dmg`
+          
+          #### Windows
+          - **インストーラー**: `DJI Fly Stream Viewer Setup *.exe`
+          
+          #### Linux
+          - **AppImage**: `DJI Fly Stream Viewer-*.AppImage`
+          
+          ### 🎯 新機能
+          - リアルタイムログ表示パネル
+          - 自動配信検出と再生
+          - 低遅延モード対応
+          
+          ### 📋 使い方
+          1. お使いのOSに対応したファイルをダウンロード
+          2. アプリを起動
+          3. 表示されたRTMP URLをDJI Flyアプリに入力
+          4. 配信開始で自動的に再生されます
+          
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Assets - macOS Intel
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./macos-latest-build/DJI Fly Stream Viewer-${{ github.event.inputs.version || '1.0.0' }}.dmg
+        asset_name: DJI.Fly.Stream.Viewer-${{ github.event.inputs.version || '1.0.0' }}-mac-x64.dmg
+        asset_content_type: application/x-apple-diskimage
+      continue-on-error: true
+        
+    - name: Upload Release Assets - macOS ARM
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./macos-latest-build/DJI Fly Stream Viewer-${{ github.event.inputs.version || '1.0.0' }}-arm64.dmg
+        asset_name: DJI.Fly.Stream.Viewer-${{ github.event.inputs.version || '1.0.0' }}-mac-arm64.dmg
+        asset_content_type: application/x-apple-diskimage
+      continue-on-error: true
+        
+    - name: Upload Release Assets - Windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./windows-latest-build/DJI Fly Stream Viewer Setup ${{ github.event.inputs.version || '1.0.0' }}.exe
+        asset_name: DJI.Fly.Stream.Viewer.Setup-${{ github.event.inputs.version || '1.0.0' }}.exe
+        asset_content_type: application/x-msdownload
+      continue-on-error: true
+        
+    - name: Upload Release Assets - Linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ubuntu-latest-build/DJI Fly Stream Viewer-${{ github.event.inputs.version || '1.0.0' }}.AppImage
+        asset_name: DJI.Fly.Stream.Viewer-${{ github.event.inputs.version || '1.0.0' }}.AppImage
+        asset_content_type: application/x-executable
+      continue-on-error: true
