@@ -2,7 +2,59 @@ const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 
 let mainWindow;
-let serverProcess;
+let serverStarted = false;
+
+// Import and start server directly
+function startServer() {
+    try {
+        // Start the server directly in the main process
+        const serverPath = path.join(__dirname, '../server.js');
+        console.log('Starting server at:', serverPath);
+        
+        // Load and execute server.js
+        require(serverPath);
+        serverStarted = true;
+        console.log('Server started successfully');
+        
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        // Try alternative approach
+        try {
+            const express = require('express');
+            const NodeMediaServer = require('node-media-server');
+            const path = require('path');
+            
+            const app = express();
+            app.use(express.static(path.join(__dirname, '../public')));
+            
+            const config = {
+                rtmp: {
+                    port: 1935,
+                    chunk_size: 60000,
+                    gop_cache: true,
+                    ping: 30,
+                    ping_timeout: 60
+                },
+                http: {
+                    port: 8000,
+                    allow_origin: '*',
+                    mediaroot: './media'
+                }
+            };
+            
+            const nms = new NodeMediaServer(config);
+            nms.run();
+            
+            app.listen(8081, () => {
+                console.log('Express server running on port 8081');
+                serverStarted = true;
+            });
+            
+        } catch (fallbackError) {
+            console.error('Fallback server also failed:', fallbackError);
+        }
+    }
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -18,7 +70,7 @@ function createWindow() {
         show: false // Don't show until ready
     });
 
-    // Start the server as a child process
+    // Start the server
     startServer();
 
     // Wait for server to be ready
@@ -108,7 +160,6 @@ function createWindow() {
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-    stopServer();
     app.quit();
 });
 
@@ -119,41 +170,5 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
-    stopServer();
+    // Cleanup if needed
 });
-
-function startServer() {
-    try {
-        // Start server.js as a child process
-        const { spawn } = require('child_process');
-        const path = require('path');
-        
-        const serverPath = path.join(__dirname, '../server.js');
-        console.log('Starting server.js at:', serverPath);
-        
-        serverProcess = spawn('node', [serverPath], {
-            stdio: 'inherit'
-        });
-        
-        serverProcess.on('error', (error) => {
-            console.error('Server process error:', error);
-        });
-        
-        serverProcess.on('exit', (code) => {
-            console.log(`Server process exited with code ${code}`);
-        });
-        
-        console.log('Server process started');
-        
-    } catch (error) {
-        console.error('Failed to start server:', error);
-    }
-}
-
-function stopServer() {
-    if (serverProcess) {
-        console.log('Stopping server process...');
-        serverProcess.kill('SIGTERM');
-        serverProcess = null;
-    }
-}
