@@ -147,6 +147,11 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false) {
     resolutionProcesses.delete(streamKey);
   });
 
+  ffmpegProcess.on('error', (error) => {
+    console.error(`Low latency stream ${streamKey} error:`, error);
+    resolutionProcesses.delete(streamKey);
+  });
+
   resolutionProcesses.set(streamKey, {
     process: ffmpegProcess,
     resolution: resolution,
@@ -159,8 +164,14 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false) {
 function stopLowLatencyStream(streamKey) {
   const streamData = resolutionProcesses.get(streamKey);
   if (streamData) {
-    streamData.process.kill('SIGTERM');
-    resolutionProcesses.delete(streamKey);
+    // Force kill the process to ensure it stops
+    streamData.process.kill('SIGKILL');
+    
+    // Wait a bit then delete from map
+    setTimeout(() => {
+      resolutionProcesses.delete(streamKey);
+    }, 100);
+    
     console.log(`Stopped low latency stream: ${streamKey}`);
   }
 }
@@ -291,6 +302,11 @@ function startStandardResolutionStream(streamKey, resolution) {
     resolutionProcesses.delete(processKey);
   });
 
+  ffmpegProcess.on('error', (error) => {
+    console.error(`Standard resolution stream ${streamKey} error:`, error);
+    resolutionProcesses.delete(processKey);
+  });
+
   resolutionProcesses.set(processKey, {
     process: ffmpegProcess,
     resolution: resolution,
@@ -311,7 +327,7 @@ app.get('/api/server-info', (req, res) => {
   res.json({
     localIP: localIP,
     rtmpPort: 1935,
-    webPort: 8080,
+    webPort: webPort,
     httpPort: 8000
   });
 });

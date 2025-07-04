@@ -4,8 +4,6 @@ const playBtn = document.getElementById('playBtn');
 const stopBtn = document.getElementById('stopBtn');
 // Removed old latency buttons
 const statusElement = document.getElementById('status');
-const streamListElement = document.getElementById('streamList');
-const streamSelect = document.getElementById('streamSelect');
 const modeSelect = document.getElementById('modeSelect');
 const rtmpUrlElement = document.getElementById('rtmpUrl');
 const currentResolutionElement = document.getElementById('currentResolution');
@@ -23,15 +21,17 @@ function updateStatus(status, className = '') {
 }
 
 async function playStream() {
-    currentStreamKey = streamSelect.value || 's';
+    currentStreamKey = 's'; // 固定のストリームキー
     const mode = modeSelect.value;
     
     let actualStreamKey = currentStreamKey;
     let streamUrl;
     
-    // Stop current stream first
+    // Stop current stream first and wait for clean stop
     if (flvPlayer) {
         stopStream();
+        // Wait for clean stop
+        await new Promise(resolve => setTimeout(resolve, 800));
     }
     
     // Parse mode selection
@@ -44,25 +44,49 @@ async function playStream() {
         // Start stream immediately for original
         setTimeout(() => {
             startNewStream(streamUrl);
-        }, 100);
+        }, 200);
     } else {
-        // Parse mode: low_720p, ultra_240p, etc.
+        // Parse mode: low_720p, ultra_360p, etc.
         const [latencyType, resolution] = mode.split('_');
         const isUltra = latencyType === 'ultra';
         
         currentResolutionElement.textContent = resolution.toUpperCase();
         latencyModeElement.textContent = isUltra ? '超低遅延' : '低遅延';
         
-        // Start latency mode and wait for it to be ready
-        await startLatencyMode(currentStreamKey, resolution, isUltra);
-        
-        // Wait a bit for FFmpeg to start processing
-        setTimeout(() => {
-            const suffix = isUltra ? '_ultra' : '';
-            actualStreamKey = `${currentStreamKey}_${resolution}${suffix}`;
-            streamUrl = `http://${window.location.hostname}:8000/live/${actualStreamKey}.flv`;
-            startNewStream(streamUrl);
-        }, 2000);
+        try {
+            // Start latency mode and wait for it to be ready
+            const success = await startLatencyMode(currentStreamKey, resolution, isUltra);
+            
+            if (success) {
+                // Wait longer for FFmpeg to start processing
+                setTimeout(() => {
+                    const suffix = isUltra ? '_ultra' : '';
+                    actualStreamKey = `${currentStreamKey}_${resolution}${suffix}`;
+                    streamUrl = `http://${window.location.hostname}:8000/live/${actualStreamKey}.flv`;
+                    startNewStream(streamUrl);
+                }, 3000);
+            } else {
+                // Fallback to original stream if latency mode fails
+                console.log('Falling back to original stream');
+                streamUrl = `http://${window.location.hostname}:8000/live/${currentStreamKey}.flv`;
+                currentResolutionElement.textContent = 'オリジナル';
+                latencyModeElement.textContent = '標準';
+                setTimeout(() => {
+                    startNewStream(streamUrl);
+                }, 500);
+            }
+        } catch (error) {
+            console.error('Failed to start latency mode:', error);
+            updateStatus('低遅延モード開始に失敗', 'error');
+            
+            // Fallback to original stream
+            streamUrl = `http://${window.location.hostname}:8000/live/${currentStreamKey}.flv`;
+            currentResolutionElement.textContent = 'オリジナル';
+            latencyModeElement.textContent = '標準';
+            setTimeout(() => {
+                startNewStream(streamUrl);
+            }, 500);
+        }
     }
 }
 
@@ -135,54 +159,27 @@ function stopStream() {
         flvPlayer.destroy();
         flvPlayer = null;
     }
+    
+    // 現在のストリームキーで低遅延ストリームも停止
+    const currentStreamKey = 's';
+    fetch(`/api/stream/stop-low-latency/${currentStreamKey}`, {
+        method: 'POST'
+    }).then(response => {
+        if (response.ok) {
+            console.log('Low latency stream stopped successfully');
+        } else {
+            console.log('Low latency stream stop request failed');
+        }
+    }).catch(error => {
+        console.log('Low latency stream stop request failed:', error);
+    });
+    
     updateStatus('停止', '');
 }
 
 function updateStreamList() {
-    fetch('/api/streams')
-        .then(response => response.json())
-        .then(streams => {
-            streamListElement.innerHTML = '';
-            
-            // Update stream selector
-            const currentValue = streamSelect.value;
-            streamSelect.innerHTML = '<option value="s">📡 デフォルトストリーム</option>';
-            
-            if (streams.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'アクティブなストリームはありません';
-                li.style.textAlign = 'center';
-                li.style.color = '#666';
-                streamListElement.appendChild(li);
-            } else {
-                streams.forEach(stream => {
-                    // Add to selector
-                    const option = document.createElement('option');
-                    option.value = stream.stream;
-                    option.textContent = `📺 ストリーム: ${stream.stream}`;
-                    if (stream.stream === currentValue) {
-                        option.selected = true;
-                    }
-                    streamSelect.appendChild(option);
-                    
-                    // Add to list
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <div class="stream-item">
-                            <span>${stream.app}/${stream.stream}</span>
-                            <button onclick="document.getElementById('streamSelect').value='${stream.stream}'; playStream()">再生</button>
-                        </div>
-                        <span class="viewer-count">${stream.viewers} 視聴者</span>
-                    `;
-                    streamListElement.appendChild(li);
-                });
-            }
-            
-            updateRtmpUrl();
-        })
-        .catch(error => {
-            console.error('Failed to fetch streams:', error);
-        });
+    // ストリーム一覧は不要になったので、RTMP URLのみ更新
+    updateRtmpUrl();
 }
 
 playBtn.addEventListener('click', playStream);
@@ -203,11 +200,14 @@ async function startLatencyMode(streamKey, resolution, isUltra) {
         if (response.ok) {
             const mode = isUltra ? '超低遅延' : '低遅延';
             updateStatus(`${mode}モード開始: ${resolution}`, 'connected');
+            return true;
         } else {
             updateStatus(`Error: ${result.error}`, 'error');
+            return false;
         }
     } catch (error) {
         updateStatus(`Error: ${error.message}`, 'error');
+        return false;
     }
 }
 
@@ -315,9 +315,13 @@ async function startStandardResolutionStream(streamKey, resolution) {
 
 // Mode change handler
 function onModeChange() {
+    // 現在のストリームを停止してから新しいモードで開始
     if (flvPlayer) {
-        // Restart the stream with new mode settings
-        playStream();
+        stopStream();
+        // 少し待ってから新しいモードで開始
+        setTimeout(() => {
+            playStream();
+        }, 500);
     }
 }
 
@@ -326,34 +330,44 @@ window.copyRtmpUrl = copyRtmpUrl;
 window.playStream = playStream;
 
 
-// Auto-connect variables
-let autoConnectEnabled = true;
-let lastStreamCount = 0;
+// Auto-connect variables (moved from duplicate declaration)
+// autoConnectEnabled and lastStreamCount are declared at the top of the file
 
 // Modified update stream list with auto-connect
 function checkAndAutoConnect() {
     fetch('/api/streams')
         .then(response => response.json())
         .then(streams => {
+            console.log('Auto-connect check - streams:', streams.length, 'flvPlayer:', !!flvPlayer, 'autoConnectEnabled:', autoConnectEnabled);
+            
             // If we found a new stream and player is not active
             if (streams.length > 0 && !flvPlayer && autoConnectEnabled) {
                 console.log('Auto-connecting to stream:', streams[0].stream);
-                // Check if stream 's' exists in the list
+                
+                // Check if stream 's' exists in the list (our default stream)
                 const sStream = streams.find(s => s.stream === 's');
                 if (sStream) {
-                    streamSelect.value = 's';
+                    console.log('Found default stream "s", auto-connecting...');
+                    // Add delay to ensure stream is ready
+                    setTimeout(() => {
+                        console.log('Starting auto-connect playback...');
+                        playStream();
+                    }, 1000);
+                    autoConnectEnabled = false; // Disable auto-connect after first connection
                 } else {
-                    streamSelect.value = streams[0].stream;
+                    console.log('Default stream "s" not found, available streams:', streams.map(s => s.stream));
                 }
-                // Add delay to ensure stream is ready
-                setTimeout(() => {
-                    playStream();
-                }, 1000);
-                autoConnectEnabled = false; // Disable auto-connect after first connection
+            } else if (streams.length > 0 && flvPlayer) {
+                console.log('Stream available but player is already active');
+            } else if (streams.length === 0) {
+                console.log('No streams available');
+            } else if (!autoConnectEnabled) {
+                console.log('Auto-connect is disabled');
             }
             
             // Re-enable auto-connect if all streams are gone
             if (streams.length === 0 && lastStreamCount > 0) {
+                console.log('All streams gone, re-enabling auto-connect');
                 autoConnectEnabled = true;
                 if (flvPlayer) {
                     stopStream();
@@ -370,25 +384,67 @@ function checkAndAutoConnect() {
 // Fetch server info on startup
 async function fetchServerInfo() {
     try {
+        console.log('Fetching server info...');
         const response = await fetch('/api/server-info');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         serverInfo = await response.json();
-        console.log('Server info:', serverInfo);
+        console.log('Server info received:', serverInfo);
         updateRtmpUrl(); // Update URL with correct IP
+        
+        // Update status to show IP is loaded
+        if (serverInfo && serverInfo.localIP) {
+            console.log('IP address loaded:', serverInfo.localIP);
+        }
     } catch (error) {
         console.error('Failed to fetch server info:', error);
+        // Fallback to localhost if server info fails
+        serverInfo = { localIP: 'localhost' };
+        updateRtmpUrl();
     }
 }
 
-// Update stream list every 5 seconds
+// Update stream list every 2 seconds for faster auto-connect
 setInterval(() => {
     updateStreamList();
     checkAndAutoConnect();
-}, 5000);
+}, 2000);
 
-// Initialize app
-fetchServerInfo();
-updateStreamList();
-checkAndAutoConnect();
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app...');
+    console.log('rtmpUrlElement:', rtmpUrlElement);
+
+    fetchServerInfo();
+    updateStreamList();
+    
+    // Wait a bit before first auto-connect check
+    setTimeout(() => {
+        checkAndAutoConnect();
+    }, 1000);
+});
+
+// Also initialize immediately in case DOMContentLoaded has already fired
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+    console.log('DOM still loading, waiting...');
+} else {
+    // DOM is already loaded
+    console.log('DOM already loaded, initializing immediately...');
+    console.log('rtmpUrlElement:', rtmpUrlElement);
+    
+    fetchServerInfo();
+    updateStreamList();
+    
+    // Wait a bit before first auto-connect check
+    setTimeout(() => {
+        checkAndAutoConnect();
+    }, 1000);
+}
 
 // Log panel functionality
 const logPanel = document.getElementById('logPanel');
@@ -481,9 +537,20 @@ updateLogs();
 
 // Update RTMP URL display
 function updateRtmpUrl() {
-    const streamKey = streamSelect.value || 's';
+    const streamKey = 's'; // 固定のストリームキー
     const hostname = serverInfo ? serverInfo.localIP : window.location.hostname;
-    rtmpUrlElement.textContent = `rtmp://${hostname}/live/${streamKey}`;
+    const rtmpUrl = `rtmp://${hostname}/live/${streamKey}`;
+    
+    console.log('Updating RTMP URL:', rtmpUrl);
+    console.log('serverInfo:', serverInfo);
+    console.log('rtmpUrlElement:', rtmpUrlElement);
+    
+    if (rtmpUrlElement) {
+        rtmpUrlElement.textContent = rtmpUrl;
+        console.log('RTMP URL updated successfully');
+    } else {
+        console.error('rtmpUrlElement not found');
+    }
 }
 
 // Copy RTMP URL to clipboard
