@@ -35,6 +35,7 @@
     "directories": {
       "output": "dist"
     },
+    "publish": null,
     "files": [
       "electron/",
       "public/",
