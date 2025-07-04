@@ -8,8 +8,18 @@ let ffmpegPath = 'ffmpeg'; // fallback to system ffmpeg
 try {
   ffmpegPath = require('ffmpeg-static');
   console.log('Using bundled FFmpeg:', ffmpegPath);
+  
+  // Verify the file exists and is executable
+  const fs = require('fs');
+  if (!fs.existsSync(ffmpegPath)) {
+    throw new Error('FFmpeg binary not found at path: ' + ffmpegPath);
+  }
+  
+  // Get absolute path to ensure it works from any working directory
+  ffmpegPath = path.resolve(ffmpegPath);
+  console.log('Resolved FFmpeg path:', ffmpegPath);
 } catch (error) {
-  console.log('Using system FFmpeg (bundled not found)');
+  console.log('Using system FFmpeg (bundled not found):', error.message);
 }
 
 
@@ -88,16 +98,21 @@ const EXTREME_LOW_LATENCY_PRESETS = {
 
 // Start low-latency stream with resolution conversion
 function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, extremeMode = false) {
-  if (resolutionProcesses.has(streamKey)) {
-    console.log(`Low latency stream already running for: ${streamKey}`);
+  // Create unique process key to prevent conflicts
+  const processKey = `${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}${extremeMode ? '_extreme' : ''}`;
+  
+  if (resolutionProcesses.has(processKey)) {
+    console.log(`Low latency stream already running for: ${processKey}`);
     return;
   }
 
   let preset;
   if (extremeMode) {
     preset = EXTREME_LOW_LATENCY_PRESETS[resolution];
+  } else if (ultraLowLatency) {
+    preset = ULTRA_LOW_LATENCY_PRESETS[resolution];
   } else {
-    preset = ultraLowLatency ? ULTRA_LOW_LATENCY_PRESETS[resolution] : RESOLUTION_PRESETS[resolution];
+    preset = RESOLUTION_PRESETS[resolution];
   }
   
   if (!preset) {
@@ -105,7 +120,7 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   }
 
   const inputUrl = `rtmp://localhost:1935/live/${streamKey}`;
-  const outputUrl = `rtmp://localhost:1935/live/${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}${extremeMode ? '_extreme' : ''}`;
+  const outputUrl = `rtmp://localhost:1935/live/${processKey}`;
 
   // Base FFmpeg arguments with audio disabled for lower latency
   const ffmpegArgs = [
@@ -113,10 +128,10 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
     '-c:v', 'libx264',
     '-preset', extremeMode ? 'superfast' : (ultraLowLatency ? 'superfast' : 'ultrafast'),
     '-tune', 'zerolatency',
-    '-crf', extremeMode ? '40' : (ultraLowLatency ? '32' : '25'), // Lower quality for low latency mode too
+    '-crf', extremeMode ? '40' : (ultraLowLatency ? '32' : '25'),
     '-maxrate', preset.bitrate,
-    '-bufsize', extremeMode ? '100k' : (ultraLowLatency ? '300k' : '1M'), // Smaller buffer for low latency
-    '-g', extremeMode ? '8' : (ultraLowLatency ? '12' : '30'), // Smaller GOP for low latency
+    '-bufsize', extremeMode ? '100k' : (ultraLowLatency ? '300k' : '1M'),
+    '-g', extremeMode ? '8' : (ultraLowLatency ? '12' : '30'),
     '-keyint_min', extremeMode ? '8' : (ultraLowLatency ? '12' : '30'),
     '-r', preset.fps.toString(),
     '-s', `${preset.width}x${preset.height}`,
@@ -143,10 +158,9 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
       '-flags', '+low_delay',
       '-framedrop', '1',
       '-sync', 'ext',
-      '-threads', '1', // Single thread for minimal latency
-      '-probesize', '32', // Minimal probe size
-      '-analyzeduration', '0', // No analysis delay
-      '-fflags', '+nobuffer+fastseek+flush_packets+discardcorrupt+genpts',
+      '-threads', '1',
+      '-probesize', '32',
+      '-analyzeduration', '0',
       '-avoid_negative_ts', 'disabled',
       '-max_delay', '0',
       '-max_interleave_delta', '0'
@@ -159,6 +173,7 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   
   // Log detailed FFmpeg settings for debugging
   console.log(`=== ${modeName} MODE SETTINGS ===`);
+  console.log(`Process Key: ${processKey}`);
   console.log(`Resolution: ${preset.width}x${preset.height} (${resolution})`);
   console.log(`Bitrate: ${preset.bitrate}`);
   console.log(`FPS: ${preset.fps}`);
@@ -169,53 +184,72 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   console.log(`FFmpeg Command: ${ffmpegPath} ${ffmpegArgs.join(' ')}`);
   console.log(`Starting ${modeName} low latency stream: ${streamKey} → ${resolution}`);
   
-  const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);
+  // Debug: Check if ffmpeg path exists before spawning
+  const fs = require('fs');
+  if (!fs.existsSync(ffmpegPath)) {
+    throw new Error(`FFmpeg binary not found at path: ${ffmpegPath}`);
+  }
+  
+  console.log(`FFmpeg path verified: ${ffmpegPath}`);
+  console.log(`FFmpeg args: ${JSON.stringify(ffmpegArgs)}`);
+  
+  const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs, {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: process.env
+  });
   
   ffmpegProcess.stdout.on('data', (data) => {
-    console.log(`Low latency ${streamKey}: ${data}`);
+    console.log(`Low latency ${processKey}: ${data}`);
   });
 
   ffmpegProcess.stderr.on('data', (data) => {
     const dataStr = data.toString();
-    console.log(`Low latency ${streamKey} stderr: ${dataStr}`);
-    // addLog('info', `FFmpeg ${streamKey}: ${dataStr}`); // ログ肥大化防止のためコメントアウト
+    console.log(`Low latency ${processKey} stderr: ${dataStr}`);
   });
 
   ffmpegProcess.on('close', (code) => {
-    console.log(`Low latency stream ${streamKey} stopped with code ${code}`);
-    addLog('info', `低遅延ストリーム停止: ${streamKey} (code: ${code})`);
-    resolutionProcesses.delete(streamKey);
+    console.log(`Low latency stream ${processKey} stopped with code ${code}`);
+    addLog('info', `低遅延ストリーム停止: ${processKey} (code: ${code})`);
+    resolutionProcesses.delete(processKey);
   });
 
   ffmpegProcess.on('error', (error) => {
-    console.error(`Low latency stream ${streamKey} error:`, error);
-    addLog('error', `低遅延ストリームエラー: ${streamKey} - ${error.message}`);
-    resolutionProcesses.delete(streamKey);
+    console.error(`Low latency stream ${processKey} error:`, error);
+    addLog('error', `低遅延ストリームエラー: ${processKey} - ${error.message}`);
+    resolutionProcesses.delete(processKey);
   });
 
-  resolutionProcesses.set(streamKey, {
+  resolutionProcesses.set(processKey, {
     process: ffmpegProcess,
     resolution: resolution,
-    outputStream: `${streamKey}_${resolution}${ultraLowLatency ? '_ultra' : ''}${extremeMode ? '_extreme' : ''}`,
+    outputStream: processKey,
     ultraLowLatency: ultraLowLatency,
-    extremeMode: extremeMode
+    extremeMode: extremeMode,
+    streamKey: streamKey
   });
 }
 
 // Stop low-latency stream
 function stopLowLatencyStream(streamKey) {
-  const streamData = resolutionProcesses.get(streamKey);
-  if (streamData) {
-    // Force kill the process to ensure it stops
-    streamData.process.kill('SIGKILL');
-    
-    // Wait a bit then delete from map
-    setTimeout(() => {
-      resolutionProcesses.delete(streamKey);
-    }, 100);
-    
-    console.log(`Stopped low latency stream: ${streamKey}`);
+  // Stop all processes for this stream key
+  const keysToDelete = [];
+  
+  for (const [processKey, streamData] of resolutionProcesses.entries()) {
+    if (streamData.streamKey === streamKey) {
+      try {
+        streamData.process.kill('SIGKILL');
+        keysToDelete.push(processKey);
+        console.log(`Stopped low latency stream: ${processKey}`);
+      } catch (error) {
+        console.error(`Error stopping process ${processKey}:`, error);
+      }
+    }
   }
+  
+  // Clean up after a short delay
+  setTimeout(() => {
+    keysToDelete.forEach(key => resolutionProcesses.delete(key));
+  }, 100);
 }
 
 app.get('/api/streams', (req, res) => {
@@ -235,7 +269,7 @@ app.get('/api/streams', (req, res) => {
 // API endpoint to start low-latency stream with resolution conversion
 app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
   const { streamKey, resolution } = req.params;
-  const { ultra, extreme } = req.query; // ?ultra=true for ultra low latency, ?extreme=true for extreme mode
+  const { ultra = 'false', extreme = 'false' } = req.query; // Default to 'false' if not provided
   
   console.log(`=== 低遅延モード要求 ===`);
   console.log(`StreamKey: ${streamKey}`);
@@ -254,15 +288,18 @@ app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
   
   let presets;
   let mode;
-  if (extreme === 'true') {
+  const isUltraMode = ultra === 'true';
+  const isExtremeMode = extreme === 'true';
+  
+  if (isExtremeMode) {
     presets = EXTREME_LOW_LATENCY_PRESETS;
     mode = 'EXTREME low latency';
-  } else if (ultra === 'true') {
+  } else if (isUltraMode) {
     presets = ULTRA_LOW_LATENCY_PRESETS;
     mode = 'ULTRA low latency';
   } else {
-    // For low latency mode (low_), use ULTRA_LOW_LATENCY_PRESETS for resolution downscaling
-    presets = ULTRA_LOW_LATENCY_PRESETS;
+    // For standard low latency mode, use RESOLUTION_PRESETS
+    presets = RESOLUTION_PRESETS;
     mode = 'Low latency';
   }
   
@@ -276,7 +313,7 @@ app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
   try {
     console.log(`✅ 低遅延ストリーム開始: ${streamKey} → ${resolution} (${mode})`);
     addLog('success', `${mode}ストリーム開始: ${streamKey} → ${resolution}`);
-    startLowLatencyStream(streamKey, resolution, ultra === 'true', extreme === 'true');
+    startLowLatencyStream(streamKey, resolution, isUltraMode, isExtremeMode);
     res.json({ success: true, message: `${mode} stream started: ${streamKey} at ${resolution}` });
   } catch (error) {
     const errorMsg = `Failed to start low latency stream: ${error.message}`;
@@ -293,6 +330,34 @@ app.post('/api/stream/stop-low-latency/:streamKey', (req, res) => {
   try {
     stopLowLatencyStream(streamKey);
     res.json({ success: true, message: `Low latency stream stopped: ${streamKey}` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API endpoint to stop ALL FFmpeg processes (emergency cleanup)
+app.post('/api/stream/stop-all', (req, res) => {
+  try {
+    console.log('Emergency cleanup: Stopping all FFmpeg processes');
+    const processCount = resolutionProcesses.size;
+    
+    for (const [processKey, proc] of resolutionProcesses.entries()) {
+      try {
+        console.log(`Force killing process: ${processKey}`);
+        proc.process.kill('SIGKILL');
+      } catch (e) {
+        console.error(`Failed to kill process ${processKey}:`, e);
+      }
+    }
+    
+    resolutionProcesses.clear();
+    addLog('warning', `緊急停止: ${processCount}個のFFmpegプロセスを停止しました`);
+    
+    res.json({ 
+      success: true, 
+      message: `Stopped ${processCount} FFmpeg processes`,
+      processCount: processCount
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -430,6 +495,8 @@ function getLocalIP() {
 
 const localIP = getLocalIP();
 
+
+
 app.listen(webPort, '0.0.0.0', () => {
   addLog('success', `Webサーバー起動: http://${localIP}:${webPort}`);
   addLog('info', `ローカルアクセス: http://localhost:${webPort}`);
@@ -528,12 +595,15 @@ process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
 
 function cleanup() {
-  for (const proc of resolutionProcesses.values()) {
+  console.log('Cleaning up FFmpeg processes...');
+  for (const [processKey, proc] of resolutionProcesses.entries()) {
     try {
+      console.log(`Killing process: ${processKey}`);
       proc.process.kill('SIGKILL');
     } catch (e) {
-      console.error('Failed to kill ffmpeg process:', e);
+      console.error(`Failed to kill ffmpeg process ${processKey}:`, e);
     }
   }
+  resolutionProcesses.clear();
   process.exit();
 }

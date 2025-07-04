@@ -14,24 +14,41 @@
             </h1>
             <button id="djiGoggles3Btn" class="dji-button" style="margin-left: auto;">⚙️ 接続方法</button>
         </div>
+        
+        <!-- シンプルなツールバー -->
         <div class="controls-row status-group">
-            <select id="modeSelect">
-                <option value="original">🎥 標準品質 (1080p)</option>
-                <option value="low_720p">⚡ 低遅延 720p</option>
-                <option value="low_480p">⚡ 低遅延 480p</option>
-            </select>
-            <span class="label">状態:</span>
-            <span id="status" class="value">未接続</span>
-            <span class="label">RTMP URL:</span>
-            <code id="rtmpUrl" onclick="copyRtmpUrl()" style="border: 2px solid #1976d2; background: #e3f2fd; color: #0d47a1; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 1.05em; cursor: pointer;">読み込み中...</code>
-            <button class="help-button" id="rtmpHelp" title="RTMP URLのヘルプ">?</button>
+            <!-- RTMP URL -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="label">RTMP URL:</span>
+                <code id="rtmpUrl" onclick="copyRtmpUrl()" style="border: 2px solid #1976d2; background: #e3f2fd; color: #0d47a1; padding: 4px 12px; border-radius: 5px; font-weight: bold; font-size: 1.05em; cursor: pointer;">読み込み中...</code>
+                <button class="help-button" id="rtmpHelp" title="RTMP URLのヘルプ">?</button>
+            </div>
+            
+            <!-- 品質選択 -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="label">品質:</span>
+                <select id="modeSelect">
+                    <option value="original">🎥 標準品質 (1080p)</option>
+                    <option value="low_720p">⚡ 低遅延 720p</option>
+                    <option value="low_480p">⚡ 低遅延 480p</option>
+                </select>
+            </div>
+            
+            <!-- 状態表示 (一番右) -->
+            <div class="status-indicator-group" style="margin-left: auto; display: flex; align-items: center;">
+                <span class="label" style="font-size: 0.8em;">状態:</span>
+                <span id="status" class="value" style="font-size: 0.8em;">未接続</span>
+            </div>
         </div>
 
         <div class="video-container">
-            <video id="videoPlayer" controls autoplay muted></video>
+            <video id="videoPlayer" controls autoplay muted playsinline></video>
         </div>
 
-
+        <!-- シンプルなデバッグ情報 -->
+        <div class="debug-info" style="margin-top: 10px; padding: 8px; background: rgba(42, 42, 42, 0.6); border-radius: 6px; font-family: monospace; font-size: 11px;">
+            <div style="color: #4a9eff;">🔍 デバッグ: <span id="flvStatus">チェック中...</span> | プレイヤー: <span id="playerStatus">未初期化</span></div>
+        </div>
     </div>
 
     <!-- ログパネル -->
@@ -47,7 +64,38 @@
         <div id="logResizer" class="log-resizer"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>
+    <script src="flv.min.js?v=1"></script>
+    <script>
+        // シンプルなデバッグ情報更新
+        const flvStatusElement = document.getElementById('flvStatus');
+        const playerStatusElement = document.getElementById('playerStatus');
+        
+        function updateDebugInfo() {
+            if (flvStatusElement) {
+                flvStatusElement.textContent = typeof flvjs !== 'undefined' ? 'OK' : 'ERROR';
+                flvStatusElement.style.color = typeof flvjs !== 'undefined' ? '#4aff4a' : '#ff4a4a';
+            }
+            if (playerStatusElement) {
+                const hasPlayer = window.flvPlayer !== null && window.flvPlayer !== undefined;
+                playerStatusElement.textContent = hasPlayer ? 'OK' : 'NULL';
+                playerStatusElement.style.color = hasPlayer ? '#4aff4a' : '#ff4a4a';
+            }
+        }
+        
+        // 初期更新
+        updateDebugInfo();
+        
+        // 1秒毎に更新
+        setInterval(updateDebugInfo, 1000);
+        
+        // flv.js チェック
+        if (typeof flvjs === 'undefined') {
+            console.error('❌ flv.js failed to load');
+            document.body.innerHTML += '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:red;color:white;padding:20px;border-radius:10px;z-index:9999;font-weight:bold;">⚠️ flv.js ライブラリの読み込みに失敗しました<br/><br/>🔄 ページを強制リロード (Ctrl+F5) してください</div>';
+        } else {
+            console.log('✅ flv.js loaded successfully');
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
