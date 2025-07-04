@@ -181,16 +181,20 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   });
 
   ffmpegProcess.stderr.on('data', (data) => {
-    console.log(`Low latency ${streamKey} stderr: ${data}`);
+    const dataStr = data.toString();
+    console.log(`Low latency ${streamKey} stderr: ${dataStr}`);
+    addLog('info', `FFmpeg ${streamKey}: ${dataStr}`);
   });
 
   ffmpegProcess.on('close', (code) => {
     console.log(`Low latency stream ${streamKey} stopped with code ${code}`);
+    addLog('info', `低遅延ストリーム停止: ${streamKey} (code: ${code})`);
     resolutionProcesses.delete(streamKey);
   });
 
   ffmpegProcess.on('error', (error) => {
     console.error(`Low latency stream ${streamKey} error:`, error);
+    addLog('error', `低遅延ストリームエラー: ${streamKey} - ${error.message}`);
     resolutionProcesses.delete(streamKey);
   });
 
@@ -238,11 +242,19 @@ app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
   const { streamKey, resolution } = req.params;
   const { ultra, extreme } = req.query; // ?ultra=true for ultra low latency, ?extreme=true for extreme mode
   
-  console.log(`Low latency request: streamKey=${streamKey}, resolution=${resolution}, ultra=${ultra}, extreme=${extreme}`);
-  console.log('Active streams:', Array.from(activeStreams.keys()));
+  console.log(`=== 低遅延モード要求 ===`);
+  console.log(`StreamKey: ${streamKey}`);
+  console.log(`Resolution: ${resolution}`);
+  console.log(`Ultra: ${ultra}`);
+  console.log(`Extreme: ${extreme}`);
+  console.log(`Active streams: ${Array.from(activeStreams.keys())}`);
+  addLog('info', `低遅延モード要求: ${streamKey} → ${resolution} (ultra=${ultra}, extreme=${extreme})`);
   
   if (!activeStreams.has(streamKey)) {
-    return res.status(404).json({ error: 'Stream not found' });
+    const errorMsg = `Stream not found: ${streamKey}`;
+    console.error(`❌ ${errorMsg}`);
+    addLog('error', errorMsg);
+    return res.status(404).json({ error: errorMsg });
   }
   
   let presets;
@@ -260,13 +272,21 @@ app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
   }
   
   if (!presets[resolution]) {
-    return res.status(400).json({ error: 'Invalid resolution preset' });
+    const errorMsg = `Invalid resolution preset: ${resolution}`;
+    console.error(`❌ ${errorMsg}`);
+    addLog('error', errorMsg);
+    return res.status(400).json({ error: errorMsg });
   }
   
   try {
+    console.log(`✅ 低遅延ストリーム開始: ${streamKey} → ${resolution} (${mode})`);
+    addLog('success', `${mode}ストリーム開始: ${streamKey} → ${resolution}`);
     startLowLatencyStream(streamKey, resolution, ultra === 'true', extreme === 'true');
     res.json({ success: true, message: `${mode} stream started: ${streamKey} at ${resolution}` });
   } catch (error) {
+    const errorMsg = `Failed to start low latency stream: ${error.message}`;
+    console.error(`❌ ${errorMsg}`);
+    addLog('error', errorMsg);
     res.status(500).json({ error: error.message });
   }
 });

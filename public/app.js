@@ -223,13 +223,18 @@ async function startLatencyMode(streamKey, resolution, isUltra, isExtreme) {
             } else {
                 mode = '低遅延';
             }
+            console.log(`✅ ${mode}モード開始成功: ${resolution}`);
             updateStatus(`${mode}モード開始: ${resolution}`, 'connected');
             return true;
         } else {
+            console.error(`❌ 低遅延モード開始失敗: HTTP ${response.status} - ${result.error}`);
+            console.error('Response details:', result);
             updateStatus(`Error: ${result.error}`, 'error');
             return false;
         }
     } catch (error) {
+        console.error(`❌ 低遅延モード開始エラー: ${error.message}`);
+        console.error('Error details:', error);
         updateStatus(`Error: ${error.message}`, 'error');
         return false;
     }
