@@ -75,19 +75,19 @@ const RESOLUTION_PRESETS = {
 
 // Ultra low latency presets with packet dropping
 const ULTRA_LOW_LATENCY_PRESETS = {
-  '480p': { width: 640, height: 360, bitrate: '400k', fps: 25, dropThreshold: 50 },
-  '720p': { width: 854, height: 480, bitrate: '600k', fps: 25, dropThreshold: 100 },
-  '360p': { width: 426, height: 240, bitrate: '200k', fps: 25, dropThreshold: 30 },
-  '240p': { width: 320, height: 180, bitrate: '100k', fps: 20, dropThreshold: 20 }
+  '480p': { width: 480, height: 270, bitrate: '300k', fps: 20, dropThreshold: 50 },
+  '720p': { width: 640, height: 360, bitrate: '400k', fps: 20, dropThreshold: 100 },
+  '360p': { width: 320, height: 180, bitrate: '150k', fps: 15, dropThreshold: 30 },
+  '240p': { width: 240, height: 135, bitrate: '80k', fps: 10, dropThreshold: 20 }
 };
 
 // EXTREME low latency presets - 極限設定
 const EXTREME_LOW_LATENCY_PRESETS = {
-  '480p': { width: 426, height: 240, bitrate: '200k', fps: 15, dropThreshold: 100 },
-  '720p': { width: 640, height: 360, bitrate: '300k', fps: 15, dropThreshold: 200 },
-  '360p': { width: 320, height: 180, bitrate: '150k', fps: 15, dropThreshold: 50 },
-  '240p': { width: 213, height: 120, bitrate: '80k', fps: 10, dropThreshold: 30 },
-  '180p': { width: 160, height: 90, bitrate: '50k', fps: 10, dropThreshold: 20 }
+  '480p': { width: 320, height: 180, bitrate: '150k', fps: 10, dropThreshold: 100 },
+  '720p': { width: 480, height: 270, bitrate: '200k', fps: 10, dropThreshold: 200 },
+  '360p': { width: 240, height: 135, bitrate: '100k', fps: 8, dropThreshold: 50 },
+  '240p': { width: 160, height: 90, bitrate: '60k', fps: 5, dropThreshold: 30 },
+  '180p': { width: 120, height: 68, bitrate: '40k', fps: 5, dropThreshold: 20 }
 };
 
 
@@ -254,8 +254,8 @@ app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
     presets = ULTRA_LOW_LATENCY_PRESETS;
     mode = 'ULTRA low latency';
   } else {
-    // For low latency mode (low_), use RESOLUTION_PRESETS with lower quality settings
-    presets = RESOLUTION_PRESETS;
+    // For low latency mode (low_), use ULTRA_LOW_LATENCY_PRESETS for resolution downscaling
+    presets = ULTRA_LOW_LATENCY_PRESETS;
     mode = 'Low latency';
   }
   
