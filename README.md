@@ -20,7 +20,6 @@ DJI FlyアプリからRTMP配信を受信し、低遅延で視聴できます。
 
 #### DMGファイルから（推奨）
 #### DMGファイルから（推奨）
-#### Mac
 1. [リリースページ](https://github.com/yourusername/dji-fly-stream-viewer/releases)から最新の`.dmg`ファイルをダウンロード
 2. ダウンロードした`.dmg`ファイルをダブルクリック
 3. 表示されたウィンドウで「DJI Fly Stream Viewer」アイコンをApplicationsフォルダにドラッグ
