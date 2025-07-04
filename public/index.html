@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJI Fly Stream Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1><img src="icon.png" alt="DJI Icon" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 10px;">DJI Fly Stream Viewer</h1>
+        
+        <div class="main-controls">
+            <div class="stream-selectors">
+                <div class="selector-group">
+                    <select id="streamSelect">
+                        <option value="s">📡 デフォルトストリーム</option>
+                    </select>
+                    <button class="help-button" id="streamHelp" title="ストリーム選択のヘルプ">?</button>
+                </div>
+                <div class="selector-group">
+                    <select id="modeSelect">
+                        <option value="original">🎥 標準品質 (遅延あり)</option>
+                        <option value="low_720p">⚡ 低遅延 720p</option>
+                        <option value="low_480p">⚡ 低遅延 480p</option>
+                        <option value="ultra_360p">🚀 超低遅延 360p</option>
+                        <option value="ultra_240p">💨 最小遅延 240p</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-buttons">
+                <button id="playBtn">▶️ 配信再生</button>
+                <button id="stopBtn">⏹️ 停止</button>
+                <button id="djiGoggles3Btn" class="dji-button">⚙️ DJI Goggles3 接続方法</button>
+            </div>
+        </div>
+
+        <div class="stream-status">
+            <div class="status-item">
+                <span class="label">状態:</span>
+                <span id="status" class="value">未接続</span>
+            </div>
+            <div class="status-item">
+                <span class="label">モード:</span>
+                <span id="latencyMode" class="value">標準</span>
+                <span class="separator">•</span>
+                <span id="currentResolution" class="value">オリジナル</span>
+            </div>
+            <div class="status-item rtmp-url">
+                <span class="label">RTMP URL:</span>
+                <code id="rtmpUrl" onclick="copyRtmpUrl()">rtmp://localhost/live/s</code>
+                <button class="help-button" id="rtmpHelp" title="RTMP URLのヘルプ">?</button>
+            </div>
+        </div>
+
+        <div class="video-container">
+            <video id="videoPlayer" controls autoplay muted></video>
+        </div>
+
+        <div class="stream-list">
+            <h3>アクティブストリーム</h3>
+            <ul id="streamList"></ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{
+  "name": "dji-fly-viewer",
+  "version": "1.0.0",
+  "description": "DJI Fly drone streaming viewer with RTMP server",
+  "author": "DJI Fly Viewer Team",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "concurrently \"npm run server\" \"npm run web\"",
+    "server": "node server.js",
+    "web": "http-server public -p 8080 -c-1",
+    "electron": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-all": "electron-builder --win --mac --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "node-media-server": "^2.6.4",
+    "express": "^4.18.2",
+    "http-server": "^14.1.1",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4",
+    "concurrently": "^8.2.0"
+  },
+  "build": {
+    "appId": "com.djiflyviewer.app",
+    "productName": "DJI Fly Stream Viewer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/",
+      "public/",
+      "server.js",
+      "package.json",
+      "node_modules/"
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**/*",
+      "node_modules/ffprobe-static/**/*",
+      "node_modules/node-media-server/**/*",
+      "node_modules/express/**/*",
+      "public/**/*",
+      "server.js"
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "icon": "icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "icon": "icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "icon.png",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

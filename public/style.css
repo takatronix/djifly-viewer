@@ -1,0 +1,364 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 20px;
+    background-color: #2a2a2a;
+    border-radius: 10px;
+}
+
+.stream-selectors {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.selector-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stream-selectors select {
+    padding: 10px 15px;
+    border: 1px solid #333;
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    border-radius: 5px;
+    font-size: 14px;
+    min-width: 180px;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.control-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 100px;
+}
+
+#playBtn {
+    background-color: #4a9eff;
+    color: white;
+}
+
+#playBtn:hover {
+    background-color: #357dd8;
+}
+
+#stopBtn {
+    background-color: #ff4a4a;
+    color: white;
+}
+
+#stopBtn:hover {
+    background-color: #d83535;
+}
+
+
+#lowLatencyBtn {
+    background-color: #ff9a4a;
+    color: white;
+}
+
+#lowLatencyBtn:hover {
+    background-color: #d87d35;
+}
+
+#ultraLowLatencyBtn {
+    background-color: #ff4a9a;
+    color: white;
+    font-weight: bold;
+}
+
+#ultraLowLatencyBtn:hover {
+    background-color: #d8357d;
+}
+
+.dji-button {
+    background-color: #2196f3;
+    color: white;
+    font-weight: bold;
+    border: 2px solid #1976d2;
+    position: relative;
+    overflow: hidden;
+}
+
+.dji-button::before {
+    content: '🚁';
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.dji-button:hover {
+    background-color: #1976d2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.help-button {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #666;
+    background-color: #444;
+    color: #ccc;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.help-button:hover {
+    background-color: #2196f3;
+    color: white;
+    border-color: #2196f3;
+    transform: scale(1.1);
+}
+
+.rtmp-url {
+    position: relative;
+}
+
+.rtmp-url .help-button {
+    margin-left: 8px;
+}
+
+/* Help tooltip styles */
+.help-tooltip {
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    max-width: 300px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid #555;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.help-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.help-tooltip::before {
+    content: '';
+    position: absolute;
+    border: 6px solid transparent;
+    border-bottom-color: #333;
+    top: -12px;
+    left: 20px;
+}
+
+.help-tooltip h4 {
+    color: #2196f3;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.help-tooltip ul {
+    margin: 8px 0;
+    padding-left: 16px;
+}
+
+.help-tooltip li {
+    margin-bottom: 4px;
+}
+
+.stream-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 12px 20px;
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.status-item .label {
+    color: #888;
+    font-weight: 500;
+}
+
+.status-item .value {
+    color: #f0f0f0;
+    font-weight: 600;
+}
+
+.status-item .separator {
+    color: #666;
+    margin: 0 5px;
+}
+
+.rtmp-url {
+    flex: 1;
+    min-width: 300px;
+}
+
+.rtmp-url code {
+    background-color: #1a1a1a;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    color: #4a9eff;
+    border: 1px solid #333;
+    transition: all 0.2s ease;
+}
+
+.rtmp-url code:hover {
+    background-color: #333;
+    border-color: #4a9eff;
+    transform: scale(1.02);
+}
+
+#status.connected {
+    color: #4aff4a;
+}
+
+#status.error {
+    color: #ff4a4a;
+}
+
+@media (max-width: 768px) {
+    .stream-status {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .status-item {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .rtmp-url {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .control-buttons {
+        flex-direction: column;
+    }
+    
+    .control-buttons button {
+        min-width: auto;
+        width: 100%;
+    }
+}
+
+.video-container {
+    background-color: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+#videoPlayer {
+    width: 100%;
+    max-height: 600px;
+    display: block;
+}
+
+.stream-list {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.stream-list h3 {
+    margin-bottom: 15px;
+    color: #4a9eff;
+}
+
+#streamList {
+    list-style: none;
+}
+
+#streamList li {
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: #333;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#streamList li:hover {
+    background-color: #3a3a3a;
+}
+
+.stream-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.viewer-count {
+    background-color: #4a9eff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 14px;
+}
