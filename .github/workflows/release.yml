@@ -29,18 +29,26 @@ jobs:
         node-version: 18
         
     - name: Install dependencies
-      run: npm ci
+      run: npm install
       
-    - name: Build Electron app
+    - name: Build Electron app (macOS)
+      if: matrix.os == 'macos-latest'
+      run: npm run build-mac
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    - name: Build Electron app (Windows)
+      if: matrix.os == 'windows-latest'
+      run: npm run build-win
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    - name: Build Electron app (Linux)
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          npm run build-mac
-        elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-          npm run build-win
-        else
-          npm run build-linux
-        fi
-      shell: bash
+        sudo apt-get update
+        sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libgtk-3-dev libxss1
+        npm run build-linux
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
