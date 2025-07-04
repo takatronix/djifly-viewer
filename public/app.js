@@ -1,8 +1,6 @@
 let flvPlayer = null;
 const videoElement = document.getElementById('videoPlayer');
-const playBtn = document.getElementById('playBtn');
-const stopBtn = document.getElementById('stopBtn');
-// Removed old latency buttons
+// Removed play/stop buttons - auto play on mode change
 const statusElement = document.getElementById('status');
 const modeSelect = document.getElementById('modeSelect');
 const rtmpUrlElement = document.getElementById('rtmpUrl');
@@ -191,8 +189,7 @@ function updateStreamList() {
     updateRtmpUrl();
 }
 
-playBtn.addEventListener('click', playStream);
-stopBtn.addEventListener('click', stopStream);
+// Auto play on mode change - removed play/stop buttons
 modeSelect.addEventListener('change', onModeChange);
 
 
@@ -349,6 +346,9 @@ function onModeChange() {
         setTimeout(() => {
             playStream();
         }, 500);
+    } else {
+        // プレイヤーがアクティブでない場合は即座に再生開始
+        playStream();
     }
 }
 
