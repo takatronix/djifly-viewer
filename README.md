@@ -1,6 +1,6 @@
 # DJI Fly Stream Viewer
 
-A desktop application for receiving and viewing live streaming from DJI drones on PC. Receives RTMP streaming from DJI Fly app and provides low-latency viewing experience. Despite the name including "DJI", this is a generic RTMP streaming receiver that also works with OBS and other streaming software.
+A desktop application for receiving and viewing live streaming from DJI drones on PC. Receives RTMP streaming from DJI Fly app and provides stable viewing experience. Despite the name including "DJI", this is a generic RTMP streaming receiver that also works with OBS and other streaming software.
 
 ![DJI Fly Stream Viewer](https://img.shields.io/badge/DJI-Fly%20Stream%20Viewer-blue?style=for-the-badge&logo=dji)
 ![Version](https://img.shields.io/badge/version-v1.0.8-green?style=for-the-badge)
@@ -9,7 +9,7 @@ A desktop application for receiving and viewing live streaming from DJI drones o
 ## 🎯 Key Features
 
 - **📡 RTMP Stream Reception**: Receives streaming from DJI Fly app, OBS, and other streaming software
-- **🎥 Low-Latency Viewing**: Multiple latency modes for optimal viewing experience
+- **🎥 Quality Streaming**: Multiple quality modes for optimal viewing experience
 - **📱 DJI Goggles 3 Support**: Detailed connection guide included
 - **🌐 Web UI**: User-friendly interface with real-time controls
 - **⚡ Resolution Conversion**: Real-time resolution adjustment and optimization
@@ -71,8 +71,8 @@ The application will automatically detect the stream and start playback. You can
 ### Quality Modes
 
 - **🎥 Standard Quality (1080p)**: High quality with optimal stability
-- **⚡ Low Latency 720p**: Reduced latency with good quality
-- **⚡ Low Latency 480p**: Minimal latency for real-time applications
+- **⚡ Enhanced 720p**: Optimized quality with good performance
+- **⚡ Enhanced 480p**: Optimized for lower bandwidth environments
 
 ### Resolution Presets
 
@@ -127,7 +127,7 @@ The application will automatically detect the stream and start playback. You can
 ### Video Playback Issues
 1. Switch from Wi-Fi to wired connection
 2. Lower resolution (720p → 480p)
-3. Disable low-latency mode
+3. Try standard quality mode instead of enhanced modes
 4. Clear browser cache and reload
 
 ### Audio Issues
@@ -197,8 +197,8 @@ npm run build-all
 ```
 GET  /api/streams        # Active streams list
 GET  /api/server-info    # Server information (IP, etc.)
-POST /api/stream/low-latency/:streamKey/:resolution
-POST /api/stream/stop-low-latency/:streamKey
+POST /api/stream/resolution/:streamKey/:resolution  # Resolution conversion
+POST /api/stream/stop-conversion/:streamKey         # Stop resolution conversion
 ```
 
 ## 📄 License
@@ -239,7 +239,7 @@ MIT License
 - ✅ **Fixed DJI compatibility**: Corrected stream URL paths for DJI devices
 - ✅ **Fixed OBS compatibility**: Maintained compatibility with OBS Studio
 - ✅ **H.264 encoding fix**: Resolved H.264 encoding errors
-- ✅ **Low-latency improvements**: Fixed RTMP input URLs for latency conversion
+- ✅ **Stream processing improvements**: Fixed RTMP input URLs for resolution conversion
 - ✅ **Cross-platform support**: Windows x64/ia32 and macOS Intel/ARM64
 
 ### v1.0.7
