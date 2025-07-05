@@ -1,112 +1,64 @@
-name: Build and Release
+name: Release
 
 on:
   push:
     tags:
-      - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version number (e.g., 1.0.1)'
-        required: true
-        default: '1.0.0'
-
-permissions:
-  contents: write
+      - 'v*' # v1.0.0, v2.1.3のようなタグが作成されたときに実行
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  release:
+    runs-on: macos-latest
     
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-        
     steps:
-    - name: Check out Git repository
-      uses: actions/checkout@v4
-      
-    - name: Install Node.js
-      uses: actions/setup-node@v4
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
       with:
-        node-version: 18
+        node-version: '18'
         
     - name: Install dependencies
       run: npm install
       
-    - name: Build Electron app (macOS)
-      if: matrix.os == 'macos-latest'
-      run: npm run build-mac
+    - name: Build for all platforms
+      run: npm run build-all
       
-    - name: Build Electron app (Windows)
-      if: matrix.os == 'windows-latest'
-      run: npm run build-win
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
-    - name: Build Electron app (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libgtk-3-dev libxss1
-        npm run build-linux
-        
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.os }}-build
-        path: |
-          dist/*.dmg
-          dist/*.exe
-          dist/*.AppImage
-          dist/*.blockmap
-          dist/*.yml
-          
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Check out Git repository
-      uses: actions/checkout@v4
-      
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      
-    - name: Create Release and Upload Assets
+    - name: Create Release
       uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
-        name: Release ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        name: Release ${{ steps.get_version.outputs.VERSION }}
         body: |
-          ## 🚁 DJI Fly Stream Viewer ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+          ## New Features
+          - 🔄 Universal DJI device support (not just DJI Goggles 3)
+          - 🌐 Multi-language support (English/Japanese) with language preference saving
+          - 📖 Enhanced connection guide with step-by-step images
+          - 🎨 Cleaner UI without emojis in buttons
+          - 🔒 Hidden port numbers for simplified user experience
           
-          ### 📦 ダウンロード
+          ## Downloads
+          - **macOS Intel**: Download the `.dmg` file
+          - **macOS Apple Silicon**: Download the `-arm64.dmg` file
+          - **Windows**: Download the `.exe` file
+          - **Linux**: Download the `.AppImage` file
           
-          #### macOS
-          - **Intel Mac**: `DJI.Fly.Stream.Viewer-*-mac-x64.dmg`
-          - **Apple Silicon (M1/M2/M3)**: `DJI.Fly.Stream.Viewer-*-mac-arm64.dmg`
+          ## Installation
+          1. Download the appropriate file for your system
+          2. Install the application
+          3. Run the application and follow the connection guide
           
-          #### Windows
-          - **インストーラー**: `DJI.Fly.Stream.Viewer.Setup-*.exe`
+          ## What's Changed
+          See the commit history for detailed changes.
           
-          #### Linux
-          - **AppImage**: `DJI.Fly.Stream.Viewer-*.AppImage`
-          
-          ### 🎯 新機能
-          - リアルタイムログ表示パネル
-          - 自動配信検出と再生
-          - 低遅延モード対応
-          
-          ### 📋 使い方
-          1. お使いのOSに対応したファイルをダウンロード
-          2. アプリを起動
-          3. 表示されたRTMP URLをDJI Flyアプリに入力
-          4. 配信開始で自動的に再生されます
-          
+                 files: |
+           dist/DJI Fly Stream Viewer-*.dmg
+           dist/DJI Fly Stream Viewer Setup *.exe
+           dist/DJI Fly Stream Viewer-*.AppImage
         draft: false
         prerelease: false
-        files: |
-          **/*.dmg
-          **/*.exe
-          **/*.AppImage
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

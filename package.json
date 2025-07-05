@@ -15,7 +15,11 @@
     "build-mac": "electron-builder --mac",
     "build-linux": "electron-builder --linux",
     "build-all": "electron-builder --win --mac --linux",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "release": "npm run release:patch",
+    "release:patch": "npm version patch && git push origin main && git push origin --tags",
+    "release:minor": "npm version minor && git push origin main && git push origin --tags",
+    "release:major": "npm version major && git push origin main && git push origin --tags"
   },
   "dependencies": {
     "node-media-server": "^2.6.4",
