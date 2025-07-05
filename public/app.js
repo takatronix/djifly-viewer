@@ -15,7 +15,7 @@ let ultraLowLatencyActive = false;
 let currentStreamKey = 's';
 let serverInfo = null;
 let autoConnectEnabled = true;
-let streamUrl = 'http://localhost:8000/lives/.flv';
+let streamUrl = 'http://localhost:8000/live/s.flv';
 let lastStreamCount = 0;
 
 // シンプルな自動再生制御
@@ -99,7 +99,7 @@ async function playStream() {
     // Parse mode selection
     if (mode === 'original') {
         // Standard original quality - use the actual working path
-        newStreamUrl = `http://${window.location.hostname}:8000/lives/.flv`;
+        newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
         debugLog(`Using original quality stream: ${newStreamUrl}`, 'info');
         
         // Start stream immediately for original
@@ -127,7 +127,7 @@ async function playStream() {
                 debugLog('Low latency mode failed, falling back to original stream', 'warning');
                 updateStatus('低遅延モード失敗 - 標準品質で再生', 'warning');
                 
-                newStreamUrl = `http://${window.location.hostname}:8000/lives/.flv`;
+                newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
                 setTimeout(() => {
                     startNewStream(newStreamUrl);
                 }, 500);
@@ -138,7 +138,7 @@ async function playStream() {
             updateStatus('低遅延モード開始に失敗 - 標準品質で再生', 'error');
             
             // Fallback to original stream
-            newStreamUrl = `http://${window.location.hostname}:8000/lives/.flv`;
+            newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
             setTimeout(() => {
                 startNewStream(newStreamUrl);
             }, 500);
