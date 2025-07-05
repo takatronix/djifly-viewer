@@ -118,7 +118,7 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
     throw new Error(`Invalid resolution preset: ${resolution}`);
   }
 
-  const inputUrl = `rtmp://localhost:1935/lives/`;  // 実際のストリームパス
+  const inputUrl = `rtmp://localhost:1935/live/${streamKey}`;  // DJIとOBS両方に対応
   const outputUrl = `rtmp://localhost:1935/live/${processKey}`;
 
   // Simplified FFmpeg arguments for better compatibility
