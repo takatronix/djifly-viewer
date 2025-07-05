@@ -3,37 +3,49 @@ name: Release
 on:
   push:
     tags:
-      - 'v*' # v1.0.0, v2.1.3のようなタグが作成されたときに実行
+      - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
   release:
     runs-on: macos-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
         
     - name: Install dependencies
-      run: npm install
+      run: npm ci
       
-    - name: Build for macOS and Windows
-      run: |
-        npm run build-mac
-        npm run build-win
+    - name: Build macOS apps
+      run: npm run build-mac
+      
+    - name: Build Windows apps
+      run: npm run build-win
       
     - name: List dist files
-      run: ls -la dist/
+      run: |
+        echo "=== Dist directory contents ==="
+        ls -la dist/
+        echo "=== DMG files ==="
+        ls -la dist/*.dmg || echo "No DMG files found"
+        echo "=== EXE files ==="
+        ls -la dist/*.exe || echo "No EXE files found"
       
     - name: Get version from tag
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.get_version.outputs.VERSION }}
         name: Release ${{ steps.get_version.outputs.VERSION }}
@@ -59,9 +71,11 @@ jobs:
           See the commit history for detailed changes.
           
         files: |
-          dist/DJI Fly Stream Viewer-*.dmg
-          dist/DJI Fly Stream Viewer Setup *.exe
+          dist/*.dmg
+          dist/*.exe
+          dist/*.blockmap
         draft: false
         prerelease: false
+        fail_on_unmatched_files: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
