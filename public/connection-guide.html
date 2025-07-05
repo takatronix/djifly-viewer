@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="pageTitle">DJI Connection Guide - DJI Fly Stream Viewer</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .guide-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .guide-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .language-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .language-toggle:hover {
+            background-color: #1976d2;
+        }
+        
+        .guide-header h1 {
+            color: #2196f3;
+            margin-bottom: 10px;
+        }
+        
+        .guide-header .subtitle {
+            color: #888;
+            font-size: 18px;
+        }
+        
+        .preparation-section {
+            background-color: #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #ff9500;
+        }
+        
+        .preparation-section h2 {
+            color: #ff9500;
+            margin-bottom: 15px;
+        }
+        
+        .step-container {
+            background-color: #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .step-number {
+            background-color: #2196f3;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 16px;
+        }
+        
+        .step-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #f0f0f0;
+        }
+        
+        .step-content {
+            color: #ccc;
+            line-height: 1.6;
+        }
+        
+        .step-image {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .step-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #555;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .rtmp-url-display {
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            color: #4a9eff;
+            border: 1px solid #333;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .back-button {
+            background-color: #666;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 30px;
+        }
+        
+        .back-button:hover {
+            background-color: #777;
+        }
+        
+        .preparation-list {
+            color: #ccc;
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .preparation-list li {
+            margin-bottom: 8px;
+        }
+        
+        .app-section {
+            margin-top: 30px;
+        }
+        
+        .app-section h2 {
+            color: #2196f3;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-container">
+        <div class="guide-header">
+            <button class="language-toggle" onclick="toggleLanguage()" id="languageBtn">EN</button>
+            <h1 data-i18n="guideTitle">📹 DJI Connection Guide</h1>
+            <p class="subtitle" data-i18n="guideSubtitle">Connect your smartphone via cable to start live streaming</p>
+        </div>
+
+        <div class="preparation-section">
+            <h2 data-i18n="preparationTitle">📋 Preparation</h2>
+            <ul class="preparation-list">
+                <li data-i18n="prep1">Install DJI Fly app on your smartphone</li>
+                <li data-i18n="prep2">Connect DJI device to smartphone with USB-C cable</li>
+                <li data-i18n="prep3">Power on DJI device</li>
+            </ul>
+        </div>
+
+        <div class="app-section">
+            <h2 data-i18n="appStepsTitle">📱 DJI Fly App Steps</h2>
+            
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title" data-i18n="step1Title">Launch DJI Fly App</div>
+                </div>
+                <div class="step-content">
+                    <p data-i18n="step1Content">Launch DJI Fly app and press the Connection Guide button when it appears.</p>
+                    <div class="step-image">
+                        <img src="app_guide/img1.jpeg" alt="DJI Fly App Connection Guide Button">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title" data-i18n="step2Title">Open Camera View</div>
+                </div>
+                <div class="step-content">
+                    <p data-i18n="step2Content">Press the Camera View button in the top right corner.</p>
+                    <div class="step-image">
+                        <img src="app_guide/img2.jpeg" alt="Camera View Button">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title" data-i18n="step3Title">Access Settings</div>
+                </div>
+                <div class="step-content">
+                    <p data-i18n="step3Content">When drone preview appears, press the [...] button in the top right corner.</p>
+                    <div class="step-image">
+                        <img src="app_guide/img3.jpeg" alt="Settings Menu Button">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title" data-i18n="step4Title">Select Live Streaming</div>
+                </div>
+                <div class="step-content">
+                    <p data-i18n="step4Content">Click the Transmission tab and select Live Streaming Platforms.</p>
+                    <div class="step-image">
+                        <img src="app_guide/img4.jpeg" alt="Transmission Tab and Live Streaming Platforms">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <div class="step-title" data-i18n="step5Title">Choose RTMP</div>
+                </div>
+                <div class="step-content">
+                    <p data-i18n="step5Content">Press RTMP to select custom RTMP streaming.</p>
+                    <div class="step-image">
+                        <img src="app_guide/img5.jpeg" alt="RTMP Selection">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">6</div>
+                    <div class="step-title" data-i18n="step6Title">Enter RTMP URL</div>
+                </div>
+                <div class="step-content">
+                    <p data-i18n="step6Content">Enter the RTMP URL shown on this app's main screen and press Start LiveStream.</p>
+                    <div class="rtmp-url-display">
+                        rtmp://[This app's IP address]/live/s
+                    </div>
+                    <div class="step-image">
+                        <img src="app_guide/img6.jpeg" alt="RTMP URL Input and Start LiveStream">
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-container">
+                <div class="step-header">
+                    <div class="step-number">7</div>
+                    <div class="step-title" data-i18n="step7Title">Streaming Success</div>
+                </div>
+                <div class="step-content">
+                    <p data-i18n="step7Content">When connection is successful, the drone video will appear on this app's main screen.</p>
+                    <div class="step-image">
+                        <img src="app_guide/screen.png" alt="Successful Streaming Display">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="back-button" onclick="window.close() || (window.location.href = 'index.html')" data-i18n="backButton">
+            ← Back to Main Screen
+        </button>
+    </div>
+
+    <script>
+        // 多言語対応データ
+        const translations = {
+            en: {
+                pageTitle: "DJI Connection Guide - DJI Fly Stream Viewer",
+                guideTitle: "📹 DJI Connection Guide",
+                guideSubtitle: "Connect your smartphone via cable to start live streaming",
+                preparationTitle: "📋 Preparation",
+                prep1: "Install DJI Fly app on your smartphone",
+                prep2: "Connect DJI device to smartphone with USB-C cable",
+                prep3: "Power on DJI device",
+                appStepsTitle: "📱 DJI Fly App Steps",
+                step1Title: "Launch DJI Fly App",
+                step1Content: "Launch DJI Fly app and press the Connection Guide button when it appears.",
+                step2Title: "Open Camera View",
+                step2Content: "Press the Camera View button in the top right corner.",
+                step3Title: "Access Settings",
+                step3Content: "When drone preview appears, press the [...] button in the top right corner.",
+                step4Title: "Select Live Streaming",
+                step4Content: "Click the Transmission tab and select Live Streaming Platforms.",
+                step5Title: "Choose RTMP",
+                step5Content: "Press RTMP to select custom RTMP streaming.",
+                step6Title: "Enter RTMP URL",
+                step6Content: "Enter the RTMP URL shown on this app's main screen and press Start LiveStream.",
+                step7Title: "Streaming Success",
+                step7Content: "When connection is successful, the drone video will appear on this app's main screen.",
+                backButton: "← Back to Main Screen"
+            },
+            ja: {
+                pageTitle: "DJI 接続ガイド - DJI Fly Stream Viewer",
+                guideTitle: "📹 DJI 接続ガイド",
+                guideSubtitle: "スマートフォンをケーブルで接続してライブストリーミングを開始",
+                preparationTitle: "📋 準備",
+                prep1: "DJI Flyアプリをスマートフォンにインストール",
+                prep2: "DJI機器とスマートフォンをUSB-Cケーブルで接続",
+                prep3: "DJI機器の電源を入れる",
+                appStepsTitle: "📱 DJI Flyアプリでの手順",
+                step1Title: "DJI Flyアプリを起動",
+                step1Content: "DJI Flyアプリを起動し、コネクションガイドボタンが表示されたら押します。",
+                step2Title: "Camera Viewを開く",
+                step2Content: "右上のCamera Viewボタンを押します。",
+                step3Title: "設定にアクセス",
+                step3Content: "ドローンのプレビューが表示されたら、右上の[...]ボタンを押します。",
+                step4Title: "ライブストリーミングを選択",
+                step4Content: "Transmissionタブをクリックし、Live Streaming Platformsを選択します。",
+                step5Title: "RTMPを選択",
+                step5Content: "RTMPを押してカスタムRTMPストリーミングを選択します。",
+                step6Title: "RTMP URLを入力",
+                step6Content: "このアプリのメイン画面に表示されているRTMP URLを入力し、Start LiveStreamを押します。",
+                step7Title: "配信成功",
+                step7Content: "接続が成功すると、このアプリのメイン画面にドローンの映像が表示されます。",
+                backButton: "← メイン画面に戻る"
+            }
+        };
+
+        // 現在の言語（デフォルト英語、設定保存）
+        let currentLanguage = localStorage.getItem('guide_language') || 'en';
+
+        // 言語切り替え関数
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'ja' : 'en';
+            localStorage.setItem('guide_language', currentLanguage);
+            updateLanguage();
+            updateLanguageButton();
+        }
+
+        // 言語更新関数
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            
+            // data-i18n属性を持つ要素を更新
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (t[key]) {
+                    if (element.tagName === 'TITLE') {
+                        element.textContent = t[key];
+                    } else {
+                        element.innerHTML = t[key];
+                    }
+                }
+            });
+
+            // html要素のlang属性更新
+            document.documentElement.lang = currentLanguage;
+        }
+
+        // 言語ボタン更新
+        function updateLanguageButton() {
+            const button = document.getElementById('languageBtn');
+            if (button) {
+                button.textContent = currentLanguage === 'en' ? 'EN' : '日本語';
+            }
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLanguage();
+            updateLanguageButton();
+        });
+    </script>
+</body>
+</html>

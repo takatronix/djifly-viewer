@@ -13,8 +13,8 @@
                 <img src="icon.png" alt="DJI Icon" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 10px;">DJI Fly Stream Viewer
             </h1>
             <div style="display: flex; gap: 8px; margin-left: auto;">
-                <button id="languageToggle" class="dji-button" style="font-size: 14px; padding: 6px 12px;">🌐 EN</button>
-                <button id="djiGoggles3Btn" class="dji-button" data-i18n="connectionGuide">⚙️ Connection Guide</button>
+                <button id="languageToggle" class="dji-button" style="font-size: 14px; padding: 6px 12px;">EN</button>
+                <button id="djiGoggles3Btn" class="dji-button" data-i18n="connectionGuide">Connection Guide</button>
             </div>
         </div>
         
@@ -74,7 +74,7 @@
         // 多言語対応データ
         const translations = {
             en: {
-                connectionGuide: "⚙️ Connection Guide",
+                connectionGuide: "Connection Guide",
                 loading: "Loading...",
                 rtmpHelp: "RTMP URL Help",
                 quality: "Quality:",
@@ -116,7 +116,7 @@
                 autoplayFailed: "Auto-play failed: click play button manually"
             },
             ja: {
-                connectionGuide: "⚙️ 接続方法",
+                connectionGuide: "接続方法",
                 loading: "読み込み中...",
                 rtmpHelp: "RTMP URLのヘルプ",
                 quality: "品質:",
@@ -202,7 +202,7 @@
         function updateLanguageButton() {
             const button = document.getElementById('languageToggle');
             if (button) {
-                button.textContent = currentLanguage === 'en' ? '🌐 EN' : '🌐 日本語';
+                button.textContent = currentLanguage === 'en' ? 'EN' : '日本語';
             }
         }
 

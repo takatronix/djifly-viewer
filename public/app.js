@@ -799,11 +799,11 @@ function copyRtmpUrl() {
     });
 }
 
-// DJI Goggles 3 guide button
-const djiGoggles3Btn = document.getElementById('djiGoggles3Btn');
-if (djiGoggles3Btn) {
-    djiGoggles3Btn.addEventListener('click', () => {
-        window.open('dji-goggles3-guide.html', '_blank');
+// DJI Connection guide button
+const djiConnectionBtn = document.getElementById('djiGoggles3Btn');
+if (djiConnectionBtn) {
+    djiConnectionBtn.addEventListener('click', () => {
+        window.open('connection-guide.html', '_blank');
     });
 }
 

@@ -6,11 +6,23 @@ A desktop application for receiving and viewing live streaming from DJI drones o
 ![Version](https://img.shields.io/badge/version-v1.0.8-green?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey?style=for-the-badge)
 
+## 📑 Table of Contents
+- [🎯 Key Features](#-key-features)
+- [🚀 Quick Start](#-quick-start)
+  - [1. Installation & Launch](#1-installation--launch)
+  - [2. Configure DJI Connection](#2-configure-dji-connection)
+  - [3. Start Viewing](#3-start-viewing)
+- [📋 Detailed Usage](#-detailed-usage)
+- [🛠️ System Requirements](#️-system-requirements)
+- [📱 Tested Devices](#-tested-devices)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [🏗️ Development Information](#️-development-information)
+
 ## 🎯 Key Features
 
 - **📡 RTMP Stream Reception**: Receives streaming from DJI Fly app and DJI devices
 - **🎥 Quality Streaming**: Multiple quality modes for optimal viewing experience
-- **📱 DJI Goggles 3 Support**: Detailed connection guide included
+- **📱 DJI Device Support**: Detailed connection guide for all DJI devices included
 - **🌐 Web UI**: User-friendly interface with real-time controls
 - **⚡ Resolution Conversion**: Real-time resolution adjustment and optimization
 - **🔧 H.264 Encoding**: Fixed H.264 encoding errors for stable streaming
@@ -35,14 +47,50 @@ A desktop application for receiving and viewing live streaming from DJI drones o
 3. Follow the installation wizard
 4. Launch "DJI Fly Stream Viewer" from Desktop or Start Menu
 
-### 2. Configure DJI Fly App
+### 2. Configure DJI Connection
 
-1. Open DJI Fly app
-2. Go to Settings → Live Streaming
-3. Select "Custom RTMP"
-4. Connect your DJI Goggles to DJI Fly
-5. Enter RTMP URL: `rtmp://[displayed IP address]/live/s`
-6. Click "GO LIVE" to start streaming
+#### 📋 Preparation
+1. **Install DJI Fly app** on your smartphone
+2. **Connect DJI device** to smartphone with USB-C cable
+3. **Power on DJI device**
+
+#### 📱 DJI Fly App Connection Steps
+
+**Step 1: Launch DJI Fly App**
+- Launch DJI Fly app and press the Connection Guide button when it appears
+
+![Step 1](public/app_guide/img1.jpeg)
+
+**Step 2: Open Camera View**
+- Press the Camera View button in the top right corner
+
+![Step 2](public/app_guide/img2.jpeg)
+
+**Step 3: Access Settings**
+- When drone preview appears, press the [...] button in the top right corner
+
+![Step 3](public/app_guide/img3.jpeg)
+
+**Step 4: Select Live Streaming**
+- Click the Transmission tab and select Live Streaming Platforms
+
+![Step 4](public/app_guide/img4.jpeg)
+
+**Step 5: Choose RTMP**
+- Press RTMP to select custom RTMP streaming
+
+![Step 5](public/app_guide/img5.jpeg)
+
+**Step 6: Enter RTMP URL**
+- Enter the RTMP URL shown on this app's main screen: `rtmp://[displayed IP address]/live/s`
+- Press Start LiveStream
+
+![Step 6](public/app_guide/img6.jpeg)
+
+**Step 7: Streaming Success**
+- When connection is successful, the drone video will appear on this app's main screen
+
+![Step 7](public/app_guide/screen.png)
 
 ### 3. Start Viewing
 
@@ -96,7 +144,8 @@ The application will automatically detect the stream and start playback. You can
 - **O4 Air Unit**: Fully tested and supported
 
 ### DJI Goggles
-- **DJI Goggles 3**: Fully tested with detailed connection guide included
+- **DJI Goggles 3**: Fully tested and supported
+- **DJI Goggles (other models)**: Compatible with standard connection steps
 
 ## 🔧 Troubleshooting
 
@@ -142,7 +191,8 @@ dji-fly-viewer/
 │   ├── index.html
 │   ├── app.js
 │   ├── style.css
-│   └── dji-goggles3-guide.html
+│   ├── connection-guide.html
+│   └── app_guide/    # Connection guide images
 ├── server.js          # Node.js server
 ├── package.json       # Dependencies & build config
 └── dist/             # Built applications
@@ -231,4 +281,4 @@ MIT License
 
 ---
 
-**🚁 Enjoy your drone streaming with DJI Fly Stream Viewer!**
+**📹 Enjoy your drone streaming with DJI Fly Stream Viewer!**
