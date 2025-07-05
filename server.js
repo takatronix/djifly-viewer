@@ -74,13 +74,12 @@ function addLog(type, message) {
   console.log(`[${type.toUpperCase()}] ${message}`);
 }
 
-// Resolution presets for low latency
+// Resolution presets for low latency (smaller than original 1024x576)
 const RESOLUTION_PRESETS = {
-  '480p': { width: 854, height: 480, bitrate: '1M', fps: 30 },
-  '720p': { width: 1280, height: 720, bitrate: '2M', fps: 30 },
-  '1080p': { width: 1920, height: 1080, bitrate: '4M', fps: 30 },
-  '360p': { width: 640, height: 360, bitrate: '500k', fps: 30 },
-  '240p': { width: 426, height: 240, bitrate: '300k', fps: 30 }
+  '480p': { width: 480, height: 270, bitrate: '500k', fps: 30 },
+  '720p': { width: 720, height: 404, bitrate: '800k', fps: 30 },
+  '360p': { width: 360, height: 202, bitrate: '300k', fps: 30 },
+  '240p': { width: 240, height: 134, bitrate: '200k', fps: 30 }
 };
 
 // Ultra low latency presets with packet dropping
@@ -119,53 +118,25 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
     throw new Error(`Invalid resolution preset: ${resolution}`);
   }
 
-  const inputUrl = `rtmp://localhost:1935/live/${streamKey}`;
+  const inputUrl = `rtmp://localhost:1935/lives/`;  // 実際のストリームパス
   const outputUrl = `rtmp://localhost:1935/live/${processKey}`;
 
-  // Base FFmpeg arguments with audio disabled for lower latency
+  // Simplified FFmpeg arguments for better compatibility
   const ffmpegArgs = [
     '-i', inputUrl,
     '-c:v', 'libx264',
-    '-preset', extremeMode ? 'superfast' : (ultraLowLatency ? 'superfast' : 'ultrafast'),
+    '-preset', 'ultrafast',
     '-tune', 'zerolatency',
-    '-crf', extremeMode ? '40' : (ultraLowLatency ? '32' : '25'),
+    '-crf', '28',
     '-maxrate', preset.bitrate,
-    '-bufsize', extremeMode ? '100k' : (ultraLowLatency ? '300k' : '1M'),
-    '-g', extremeMode ? '8' : (ultraLowLatency ? '12' : '30'),
-    '-keyint_min', extremeMode ? '8' : (ultraLowLatency ? '12' : '30'),
+    '-bufsize', '1M',
+    '-g', '30',
     '-r', preset.fps.toString(),
     '-s', `${preset.width}x${preset.height}`,
-    '-an', // Disable audio completely
+    '-c:a', 'aac',
+    '-b:a', '64k',
     '-f', 'flv'
   ];
-
-  // Add ultra low latency specific options
-  if (ultraLowLatency || extremeMode) {
-    ffmpegArgs.push(
-      '-fflags', '+nobuffer+fastseek+flush_packets',
-      '-flags', '+low_delay',
-      '-strict', 'experimental',
-      '-avoid_negative_ts', 'disabled',
-      '-flush_packets', '1',
-      '-max_delay', '0'
-    );
-  }
-
-  // Add extreme mode specific options
-  if (extremeMode) {
-    ffmpegArgs.push(
-      '-fflags', '+nobuffer+fastseek+flush_packets+discardcorrupt',
-      '-flags', '+low_delay',
-      '-framedrop', '1',
-      '-sync', 'ext',
-      '-threads', '1',
-      '-probesize', '32',
-      '-analyzeduration', '0',
-      '-avoid_negative_ts', 'disabled',
-      '-max_delay', '0',
-      '-max_interleave_delta', '0'
-    );
-  }
 
   ffmpegArgs.push(outputUrl);
 
@@ -199,12 +170,22 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
   });
   
   ffmpegProcess.stdout.on('data', (data) => {
-    console.log(`Low latency ${processKey}: ${data}`);
+    console.log(`[${processKey}] STDOUT: ${data}`);
+    addLog('info', `${processKey}: ${data}`);
   });
 
   ffmpegProcess.stderr.on('data', (data) => {
     const dataStr = data.toString();
-    console.log(`Low latency ${processKey} stderr: ${dataStr}`);
+    console.log(`[${processKey}] STDERR: ${dataStr}`);
+    addLog('info', `${processKey} stderr: ${dataStr}`);
+    
+    // FFmpegの成功メッセージを検出
+    if (dataStr.includes('Stream mapping:') || dataStr.includes('Output #0')) {
+      addLog('success', `${processKey}: FFmpeg処理開始成功`);
+    }
+    if (dataStr.includes('frame=') && dataStr.includes('fps=')) {
+      addLog('info', `${processKey}: 処理中... ${dataStr.trim()}`);
+    }
   });
 
   ffmpegProcess.on('close', (code) => {
@@ -314,7 +295,27 @@ app.post('/api/stream/low-latency/:streamKey/:resolution', (req, res) => {
     console.log(`✅ 低遅延ストリーム開始: ${streamKey} → ${resolution} (${mode})`);
     addLog('success', `${mode}ストリーム開始: ${streamKey} → ${resolution}`);
     startLowLatencyStream(streamKey, resolution, isUltraMode, isExtremeMode);
-    res.json({ success: true, message: `${mode} stream started: ${streamKey} at ${resolution}` });
+    
+    // プロセス開始後、少し待ってから状態を確認
+    setTimeout(() => {
+      const processKey = `${streamKey}_${resolution}${isUltraMode ? '_ultra' : ''}${isExtremeMode ? '_extreme' : ''}`;
+      const processInfo = resolutionProcesses.get(processKey);
+      if (processInfo) {
+        console.log(`✅ FFmpegプロセス確認OK: ${processKey}`);
+        addLog('success', `FFmpegプロセス実行中: ${processKey}`);
+      } else {
+        console.log(`❌ FFmpegプロセス確認失敗: ${processKey}`);
+        addLog('error', `FFmpegプロセス見つからず: ${processKey}`);
+      }
+    }, 2000);
+    
+    res.json({ 
+      success: true, 
+      message: `${mode} stream started: ${streamKey} at ${resolution}`,
+      processKey: `${streamKey}_${resolution}`,
+      ffmpegPath: ffmpegPath,
+      preset: presets[resolution]
+    });
   } catch (error) {
     const errorMsg = `Failed to start low latency stream: ${error.message}`;
     console.error(`❌ ${errorMsg}`);
