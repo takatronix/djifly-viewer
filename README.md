@@ -1,220 +1,250 @@
 # DJI Fly Stream Viewer
 
-DJI ドローンのライブストリーミングをPCで受信・視聴するためのアプリケーションです。
-DJI FlyアプリからRTMP配信を受信し、低遅延で視聴できます。DJIとついていますが、RTMP配信を受信するだけのアプリなので、OBSや他の配信ソフトウェアから配信することも可能です。
-
+A desktop application for receiving and viewing live streaming from DJI drones on PC. Receives RTMP streaming from DJI Fly app and provides low-latency viewing experience. Despite the name including "DJI", this is a generic RTMP streaming receiver that also works with OBS and other streaming software.
 
 ![DJI Fly Stream Viewer](https://img.shields.io/badge/DJI-Fly%20Stream%20Viewer-blue?style=for-the-badge&logo=dji)
+![Version](https://img.shields.io/badge/version-v1.0.8-green?style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey?style=for-the-badge)
 
-## 🎯 主な機能
+## 🎯 Key Features
 
-- **📡 RTMP配信受信**: DJI FlyアプリやOBSなどからの配信を受信
-- **🎥 低遅延視聴**: 複数の遅延モードで最適な視聴体験
-- **📱 DJI Goggles3対応**: 詳細な接続ガイド付き
-- **🌐 Web UI**: 使いやすい日本語インターフェース
-- **⚡ 解像度変換**: リアルタイムで解像度を変更可能
+- **📡 RTMP Stream Reception**: Receives streaming from DJI Fly app, OBS, and other streaming software
+- **🎥 Low-Latency Viewing**: Multiple latency modes for optimal viewing experience
+- **📱 DJI Goggles 3 Support**: Detailed connection guide included
+- **🌐 Web UI**: User-friendly interface with real-time controls
+- **⚡ Resolution Conversion**: Real-time resolution adjustment and optimization
+- **🔧 H.264 Encoding**: Fixed H.264 encoding errors for stable streaming
+- **🤝 Cross-Platform**: Support for both OBS and DJI with unified streaming paths
 
-## 🚀 クイックスタート
+## 🚀 Quick Start
 
-### 1. アプリの起動
+### 1. Installation & Launch
 
-#### DMGファイルから（推奨）
-#### DMGファイルから（推奨）
-1. [リリースページ](https://github.com/yourusername/dji-fly-stream-viewer/releases)から最新の`.dmg`ファイルをダウンロード
-2. ダウンロードした`.dmg`ファイルをダブルクリック
-3. 表示されたウィンドウで「DJI Fly Stream Viewer」アイコンをApplicationsフォルダにドラッグ
-4. アプリケーションフォルダから「DJI Fly Stream Viewer」を起動
+#### macOS (Recommended)
+1. Download the latest `.dmg` file from [Releases](https://github.com/takatronix/djifly-viewer/releases)
+2. Choose the correct version for your Mac:
+   - **Intel Mac**: `DJI Fly Stream Viewer-1.0.8.dmg`
+   - **Apple Silicon (M1/M2/M3/M4)**: `DJI Fly Stream Viewer-1.0.8-arm64.dmg`
+3. Double-click the downloaded `.dmg` file
+4. Drag "DJI Fly Stream Viewer" to the Applications folder
+5. Launch "DJI Fly Stream Viewer" from Applications
 
 #### Windows
-1. [リリースページ](https://github.com/yourusername/dji-fly-stream-viewer/releases)から最新の`.exe`インストーラーをダウンロード
-2. ダウンロードした`.exe`ファイルをダブルクリック
-3. インストールウィザードの指示に従ってインストール
-4. デスクトップまたはスタートメニューから「DJI Fly Stream Viewer」を起動
+1. Download `DJI Fly Stream Viewer Setup 1.0.8.exe` from [Releases](https://github.com/takatronix/djifly-viewer/releases)
+2. Double-click the downloaded `.exe` file
+3. Follow the installation wizard
+4. Launch "DJI Fly Stream Viewer" from Desktop or Start Menu
 
+### 2. Configure DJI Fly App
 
-### 2. DJI Flyアプリでの設定
+1. Open DJI Fly app
+2. Go to Settings → Live Streaming
+3. Select "Custom RTMP"
+4. Connect your DJI Goggles to DJI Fly
+5. Enter RTMP URL: `rtmp://[displayed IP address]/live/s`
+6. Click "GO LIVE" to start streaming
 
-1. DJI Flyアプリを開く
-2. 設定 → ライブストリーミング
-3. 「カスタムRTMP」を選択
-4. DJIゴーグルと、DJI Flyを接続
-5. DJI FlyでRTMP URLを入力: `rtmp://[表示されたIPアドレス]/live/s`
-6. 「GO LIVE」で配信開始
+### 3. Configure OBS Studio
 
-### 3. 視聴開始
+1. Open OBS Studio
+2. Go to Settings → Stream
+3. Set Service to "Custom"
+4. Set Server to: `rtmp://[displayed IP address]/live`
+5. Set Stream Key to: `s`
+6. Click "Start Streaming"
 
-アプリの「配信再生」ボタンを押すとライブ映像が表示されます。
+### 4. Start Viewing
 
-## 📋 詳細な使い方
+The application will automatically detect the stream and start playback. You can also manually select quality modes from the interface.
 
-### RTMP配信の設定
+## 📋 Detailed Usage
 
-| 項目 | 推奨値 |
-|------|--------|
-| 解像度 | 1080p (高品質) / 720p (安定性重視) |
-| ビットレート | 2-4 Mbps |
-| フレームレート | 30fps |
-| コーデック | H.264 |
+### RTMP Streaming Settings
 
-### 遅延モードの選択
+| Setting | Recommended Value |
+|---------|-------------------|
+| Resolution | 1080p (High Quality) / 720p (Stability Focus) |
+| Bitrate | 2-4 Mbps |
+| Frame Rate | 30fps |
+| Codec | H.264 |
 
-- **標準モード**: 高画質・安定性重視
-- **低遅延モード**: 遅延を抑えたい場合
-- **超低遅延モード**: 最小遅延（画質とのトレードオフ）
+### Quality Modes
 
-### 解像度プリセット
+- **🎥 Standard Quality (1080p)**: High quality with optimal stability
+- **⚡ Low Latency 720p**: Reduced latency with good quality
+- **⚡ Low Latency 480p**: Minimal latency for real-time applications
 
-| 解像度 | 用途 |
-|--------|------|
-| オリジナル | 配信元の品質をそのまま |
-| 1080p | 高画質視聴 |
-| 720p | バランス型 |
-| 480p | 低帯域環境 |
-| 360p | 最小データ量 |
-| 240p | 超低遅延専用 |
+### Resolution Presets
 
-## 🛠️ システム要件
+| Resolution | Use Case |
+|------------|----------|
+| Original | Preserves source quality |
+| 720p | Balanced quality and performance |
+| 480p | Low bandwidth environments |
 
-### 最小要件
-- **OS**: macOS 10.14 以降
-- **CPU**: Intel Core i3 / Apple M1 以降
-- **メモリ**: 4GB RAM
-- **ネットワーク**: 有線LAN推奨
+## 🛠️ System Requirements
 
-### 推奨要件
-- **OS**: macOS 12.0 以降
-- **CPU**: Intel Core i5 / Apple M1 Pro 以降
-- **メモリ**: 8GB RAM
-- **ネットワーク**: ギガビット有線LAN
+### Minimum Requirements
+- **OS**: macOS 10.14+ / Windows 10+
+- **CPU**: Intel Core i3 / Apple M1 or equivalent
+- **Memory**: 4GB RAM
+- **Network**: Wired LAN recommended
 
-## 📱 対応デバイス
+### Recommended Requirements
+- **OS**: macOS 12.0+ / Windows 11+
+- **CPU**: Intel Core i5 / Apple M1 Pro or equivalent
+- **Memory**: 8GB RAM
+- **Network**: Gigabit Ethernet
 
-### DJI ドローン
-- DJI Mini 3 / Mini 3 Pro
+## 📱 Compatible Devices
+
+### DJI Drones
+- DJI Mini 3 / Mini 3 Pro / Mini 4 Pro
 - DJI Air 2S / Air 3
-- DJI Mavic 3シリーズ
-- DJI FPVシリーズ
+- DJI Mavic 3 Series
+- DJI FPV Series
+- DJI Avata Series
 
 ### DJI Goggles
 - DJI Goggles 3
 - DJI Goggles 2
-- DJI FPV Goggles
+- DJI FPV Goggles V2
 
-### 配信ソフト
-- DJI Flyアプリ
+### Streaming Software
+- DJI Fly App
 - OBS Studio
 - Streamlabs OBS
+- XSplit
 
-## 🔧 トラブルシューティング
+## 🔧 Troubleshooting
 
-#### 配信が接続できない
-1. ファイアウォールの設定を確認
-2. ポート1935, 8000, 8080が開放されているか確認
-3. 同一ネットワーク内にいるか確認
+### Stream Connection Issues
+1. Check firewall settings
+2. Verify ports 1935, 8000, 8081 are open
+3. Ensure devices are on the same network
+4. Try restarting the application
 
-#### 映像が途切れる・カクつく
-1. Wi-Fiの場合は有線LANに変更
-2. 解像度を下げる（720p → 480p）
-3. 超低遅延モードを無効にする
+### Video Playback Issues
+1. Switch from Wi-Fi to wired connection
+2. Lower resolution (720p → 480p)
+3. Disable low-latency mode
+4. Clear browser cache and reload
 
-#### 音声が出ない
-1. ブラウザの音声設定を確認
-2. DJI Flyアプリの音声設定を確認
-3. システムの音量設定を確認
+### Audio Issues
+1. Check browser audio settings
+2. Verify DJI Fly app audio settings
+3. Check system volume settings
+4. Ensure audio codec is supported
 
-### ポート使用状況の確認
+### Port Usage Check
 ```bash
-# 使用中のポートを確認
-lsof -i :1935 -i :8000 -i :8080
+# Check ports in use
+lsof -i :1935 -i :8000 -i :8081
 ```
 
-### ログの確認
+### Log Inspection
 ```bash
-# アプリのログを確認（開発モード）
+# View application logs (development mode)
 npm run electron
-# コンソールでエラーメッセージを確認
+# Check console for error messages
 ```
 
-## 🏗️ 開発情報
+## 🏗️ Development Information
 
-### プロジェクト構成
+### Project Structure
 ```
 dji-fly-viewer/
-├── electron/          # Electronメインプロセス
+├── electron/          # Electron main process
 │   └── main.js
-├── public/            # Webフロントエンド
+├── public/            # Web frontend
 │   ├── index.html
 │   ├── app.js
 │   ├── style.css
 │   └── dji-goggles3-guide.html
-├── server.js          # Node.jsサーバー
-├── package.json       # 依存関係・ビルド設定
-└── dist/             # ビルド済みアプリ
+├── server.js          # Node.js server
+├── package.json       # Dependencies & build config
+└── dist/             # Built applications
 ```
 
-### 主要な依存関係
-- **node-media-server**: RTMPサーバー
-- **express**: Webサーバー
-- **electron**: デスクトップアプリ化
-- **ffmpeg-static**: 動画変換エンジン
+### Key Dependencies
+- **node-media-server**: RTMP server implementation
+- **express**: Web server framework
+- **electron**: Desktop application wrapper
+- **ffmpeg-static**: Video conversion engine
 
-### 開発コマンド
+### Development Commands
 ```bash
-# 依存関係のインストール
+# Install dependencies
 npm install
 
-# 開発モードで起動
+# Start development mode
 npm run electron
 
-# サーバーのみ起動
+# Start server only
 npm start
 
-# DMGビルド
+# Build macOS DMG
 npm run build-mac
 
-# 全プラットフォームビルド
+# Build Windows installer
+npm run build-win
+
+# Build all platforms
 npm run build-all
 ```
 
-### APIエンドポイント
+### API Endpoints
 ```
-GET  /api/streams        # アクティブストリーム一覧
-GET  /api/server-info    # サーバー情報（IP等）
+GET  /api/streams        # Active streams list
+GET  /api/server-info    # Server information (IP, etc.)
 POST /api/stream/low-latency/:streamKey/:resolution
 POST /api/stream/stop-low-latency/:streamKey
 ```
 
-## 📄 ライセンス
+## 📄 License
 
 MIT License
 
-## 🤝 コントリビューション
+## 🤝 Contributing
 
-1. このリポジトリをフォーク
-2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Create a Pull Request
 
-## 📞 サポート
+## 📞 Support
 
-### 問題の報告
-- [GitHub Issues](https://github.com/your-username/dji-fly-viewer/issues)で問題を報告
-- バグレポートには以下の情報を含めてください：
-  - OS・バージョン
-  - 使用しているDJIドローン・Goggles
-  - エラーメッセージ
-  - 再現手順
+### Issue Reporting
+- Report issues on [GitHub Issues](https://github.com/takatronix/djifly-viewer/issues)
+- Please include the following information in bug reports:
+  - OS & Version
+  - DJI drone/goggles model
+  - Error messages
+  - Steps to reproduce
 
-### 機能要望
-- [GitHub Discussions](https://github.com/your-username/dji-fly-viewer/discussions)で機能要望を投稿
+### Feature Requests
+- Post feature requests on [GitHub Discussions](https://github.com/takatronix/djifly-viewer/discussions)
 
-## 🔗 関連リンク
+## 🔗 Related Links
 
-- [DJI公式サイト](https://www.dji.com/)
-- [DJI Flyアプリ](https://www.dji.com/jp/downloads/djiapp/dji-fly)
-- [FFmpeg公式サイト](https://ffmpeg.org/)
+- [DJI Official Website](https://www.dji.com/)
+- [DJI Fly App](https://www.dji.com/downloads/djiapp/dji-fly)
+- [FFmpeg Official Website](https://ffmpeg.org/)
 - [Node Media Server](https://github.com/illuspas/Node-Media-Server)
+
+## 📝 Release Notes
+
+### v1.0.8 (Latest)
+- ✅ **Fixed DJI compatibility**: Corrected stream URL paths for DJI devices
+- ✅ **Fixed OBS compatibility**: Maintained compatibility with OBS Studio
+- ✅ **H.264 encoding fix**: Resolved H.264 encoding errors
+- ✅ **Low-latency improvements**: Fixed RTMP input URLs for latency conversion
+- ✅ **Cross-platform support**: Windows x64/ia32 and macOS Intel/ARM64
+
+### v1.0.7
+- ✅ **UI layout improvements**: Moved status display, reduced font size
+- ✅ **Resolution fixes**: Changed resolution heights to even numbers
 
 ---
 
