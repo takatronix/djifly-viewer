@@ -1,6 +1,6 @@
 {
   "name": "dji-fly-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DJI Fly drone streaming viewer with RTMP server",
   "author": "DJI Fly Viewer Team",
   "main": "electron/main.js",
@@ -57,7 +57,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ]
     },
@@ -66,7 +69,10 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "ia32"]
+          "arch": [
+            "x64",
+            "ia32"
+          ]
         }
       ]
     },
@@ -75,7 +81,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
