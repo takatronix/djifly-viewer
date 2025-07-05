@@ -343,7 +343,14 @@
         };
 
         // 現在の言語（デフォルト英語、設定保存）
+        // 初回アクセス時は必ず英語から開始
         let currentLanguage = localStorage.getItem('guide_language') || 'en';
+        
+        // 確実に英語から始める場合（開発用）
+        if (!localStorage.getItem('guide_language')) {
+            localStorage.setItem('guide_language', 'en');
+            currentLanguage = 'en';
+        }
 
         // 言語切り替え関数
         function toggleLanguage() {
