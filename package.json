@@ -1,6 +1,6 @@
 {
   "name": "dji-fly-viewer",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "DJI Fly drone streaming viewer with RTMP server",
   "author": "DJI Fly Viewer Team",
   "main": "electron/main.js",
