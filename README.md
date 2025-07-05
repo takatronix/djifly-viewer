@@ -3,7 +3,7 @@
 A desktop application for receiving and viewing live streaming from DJI drones on PC. Receives RTMP streaming from DJI Fly app and provides stable viewing experience. This application is designed specifically for DJI devices and RTMP streaming.
 
 ![DJI Fly Stream Viewer](https://img.shields.io/badge/DJI-Fly%20Stream%20Viewer-blue?style=for-the-badge&logo=dji)
-![Version](https://img.shields.io/badge/version-v1.0.8-green?style=for-the-badge)
+![Version](https://img.shields.io/github/v/release/takatronix/djifly-viewer?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey?style=for-the-badge)
 
 ## 📑 Table of Contents
@@ -33,16 +33,16 @@ A desktop application for receiving and viewing live streaming from DJI drones o
 ### 1. Installation & Launch
 
 #### macOS (Recommended)
-1. Download the latest `.dmg` file from [Releases](https://github.com/takatronix/djifly-viewer/releases)
+1. Download the latest `.dmg` file from [Releases](https://github.com/takatronix/djifly-viewer/releases/latest)
 2. Choose the correct version for your Mac:
-   - **Intel Mac**: `DJI Fly Stream Viewer-1.0.8.dmg`
-   - **Apple Silicon (M1/M2/M3/M4)**: `DJI Fly Stream Viewer-1.0.8-arm64.dmg`
+   - **Intel Mac**: `DJI Fly Stream Viewer-[version].dmg`
+   - **Apple Silicon (M1/M2/M3/M4)**: `DJI Fly Stream Viewer-[version]-arm64.dmg`
 3. Double-click the downloaded `.dmg` file
 4. Drag "DJI Fly Stream Viewer" to the Applications folder
 5. Launch "DJI Fly Stream Viewer" from Applications
 
 #### Windows
-1. Download `DJI Fly Stream Viewer Setup 1.0.8.exe` from [Releases](https://github.com/takatronix/djifly-viewer/releases)
+1. Download `DJI Fly Stream Viewer Setup [version].exe` from [Releases](https://github.com/takatronix/djifly-viewer/releases/latest)
 2. Double-click the downloaded `.exe` file
 3. Follow the installation wizard
 4. Launch "DJI Fly Stream Viewer" from Desktop or Start Menu
@@ -268,16 +268,19 @@ MIT License
 
 ## 📝 Release Notes
 
-### v1.0.8 (Latest)
+See the full release history and download the latest version at [GitHub Releases](https://github.com/takatronix/djifly-viewer/releases/latest).
+
+### Recent Updates
+- ✅ **Universal DJI device support**: Support for all DJI devices, not just DJI Goggles 3
+- ✅ **Multi-language support**: English/Japanese interface with language preference saving
+- ✅ **Enhanced connection guide**: Step-by-step visual guide with actual app screenshots
+- ✅ **Cleaner UI**: Removed emojis from buttons for professional appearance
+- ✅ **Automatic releases**: GitHub Actions powered build and release system
 - ✅ **Fixed DJI compatibility**: Corrected stream URL paths for DJI devices
 - ✅ **Enhanced DJI support**: Optimized for DJI Neo and O4 Air Unit
 - ✅ **H.264 encoding fix**: Resolved H.264 encoding errors
 - ✅ **Stream processing improvements**: Fixed RTMP input URLs for resolution conversion
 - ✅ **Cross-platform support**: Windows x64/ia32 and macOS Intel/ARM64
-
-### v1.0.7
-- ✅ **UI layout improvements**: Moved status display, reduced font size
-- ✅ **Resolution fixes**: Changed resolution heights to even numbers
 
 ---
 
