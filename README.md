@@ -1,6 +1,6 @@
 # DJI Fly Stream Viewer
 
-A desktop application for receiving and viewing live streaming from DJI drones on PC. Receives RTMP streaming from DJI Fly app and provides stable viewing experience. Despite the name including "DJI", this is a generic RTMP streaming receiver that also works with OBS and other streaming software.
+A desktop application for receiving and viewing live streaming from DJI drones on PC. Receives RTMP streaming from DJI Fly app and provides stable viewing experience. This application is designed specifically for DJI devices and RTMP streaming.
 
 ![DJI Fly Stream Viewer](https://img.shields.io/badge/DJI-Fly%20Stream%20Viewer-blue?style=for-the-badge&logo=dji)
 ![Version](https://img.shields.io/badge/version-v1.0.8-green?style=for-the-badge)
@@ -8,13 +8,13 @@ A desktop application for receiving and viewing live streaming from DJI drones o
 
 ## 🎯 Key Features
 
-- **📡 RTMP Stream Reception**: Receives streaming from DJI Fly app, OBS, and other streaming software
+- **📡 RTMP Stream Reception**: Receives streaming from DJI Fly app and DJI devices
 - **🎥 Quality Streaming**: Multiple quality modes for optimal viewing experience
 - **📱 DJI Goggles 3 Support**: Detailed connection guide included
 - **🌐 Web UI**: User-friendly interface with real-time controls
 - **⚡ Resolution Conversion**: Real-time resolution adjustment and optimization
 - **🔧 H.264 Encoding**: Fixed H.264 encoding errors for stable streaming
-- **🤝 Cross-Platform**: Support for both OBS and DJI with unified streaming paths
+- **🤝 DJI Device Support**: Optimized for DJI Neo and O4 Air Unit
 
 ## 🚀 Quick Start
 
@@ -44,16 +44,7 @@ A desktop application for receiving and viewing live streaming from DJI drones o
 5. Enter RTMP URL: `rtmp://[displayed IP address]/live/s`
 6. Click "GO LIVE" to start streaming
 
-### 3. Configure OBS Studio
-
-1. Open OBS Studio
-2. Go to Settings → Stream
-3. Set Service to "Custom"
-4. Set Server to: `rtmp://[displayed IP address]/live`
-5. Set Stream Key to: `s`
-6. Click "Start Streaming"
-
-### 4. Start Viewing
+### 3. Start Viewing
 
 The application will automatically detect the stream and start playback. You can also manually select quality modes from the interface.
 
@@ -96,25 +87,16 @@ The application will automatically detect the stream and start playback. You can
 - **Memory**: 8GB RAM
 - **Network**: Gigabit Ethernet
 
-## 📱 Compatible Devices
+## 📱 Tested Devices
 
 ### DJI Drones
-- DJI Mini 3 / Mini 3 Pro / Mini 4 Pro
-- DJI Air 2S / Air 3
-- DJI Mavic 3 Series
-- DJI FPV Series
-- DJI Avata Series
+- **DJI Neo**: Fully tested and supported
+
+### DJI Air Units
+- **O4 Air Unit**: Fully tested and supported
 
 ### DJI Goggles
-- DJI Goggles 3
-- DJI Goggles 2
-- DJI FPV Goggles V2
-
-### Streaming Software
-- DJI Fly App
-- OBS Studio
-- Streamlabs OBS
-- XSplit
+- **DJI Goggles 3**: Fully tested with detailed connection guide included
 
 ## 🔧 Troubleshooting
 
@@ -230,6 +212,7 @@ MIT License
 
 - [DJI Official Website](https://www.dji.com/)
 - [DJI Fly App](https://www.dji.com/downloads/djiapp/dji-fly)
+- [DJI Neo](https://www.dji.com/neo)
 - [FFmpeg Official Website](https://ffmpeg.org/)
 - [Node Media Server](https://github.com/illuspas/Node-Media-Server)
 
@@ -237,7 +220,7 @@ MIT License
 
 ### v1.0.8 (Latest)
 - ✅ **Fixed DJI compatibility**: Corrected stream URL paths for DJI devices
-- ✅ **Fixed OBS compatibility**: Maintained compatibility with OBS Studio
+- ✅ **Enhanced DJI support**: Optimized for DJI Neo and O4 Air Unit
 - ✅ **H.264 encoding fix**: Resolved H.264 encoding errors
 - ✅ **Stream processing improvements**: Fixed RTMP input URLs for resolution conversion
 - ✅ **Cross-platform support**: Windows x64/ia32 and macOS Intel/ARM64
