@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,10 @@
             <h1 style="margin: 0 auto; display: flex; align-items: center; justify-content: center; flex: 1; text-align: center;">
                 <img src="icon.png" alt="DJI Icon" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 10px;">DJI Fly Stream Viewer
             </h1>
-            <button id="djiGoggles3Btn" class="dji-button" style="margin-left: auto;">⚙️ 接続方法</button>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+                <button id="languageToggle" class="dji-button" style="font-size: 14px; padding: 6px 12px;">🌐 EN</button>
+                <button id="djiGoggles3Btn" class="dji-button" data-i18n="connectionGuide">⚙️ Connection Guide</button>
+            </div>
         </div>
         
         <!-- シンプルなツールバー -->
@@ -20,17 +23,17 @@
             <!-- RTMP URL -->
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="label">RTMP URL:</span>
-                <code id="rtmpUrl" onclick="copyRtmpUrl()" style="border: 2px solid #1976d2; background: #e3f2fd; color: #0d47a1; padding: 4px 12px; border-radius: 5px; font-weight: bold; font-size: 1.05em; cursor: pointer;">読み込み中...</code>
-                <button class="help-button" id="rtmpHelp" title="RTMP URLのヘルプ">?</button>
+                <code id="rtmpUrl" onclick="copyRtmpUrl()" style="border: 2px solid #1976d2; background: #e3f2fd; color: #0d47a1; padding: 4px 12px; border-radius: 5px; font-weight: bold; font-size: 1.05em; cursor: pointer;" data-i18n="loading">Loading...</code>
+                <button class="help-button" id="rtmpHelp" data-i18n-title="rtmpHelp" title="RTMP URL Help">?</button>
             </div>
             
             <!-- 品質選択 -->
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="label">品質:</span>
+                <span class="label" data-i18n="quality">Quality:</span>
                 <select id="modeSelect">
-                    <option value="original">🎥 標準品質 (1080p)</option>
-                    <option value="low_720p">⚡ 低遅延 720p</option>
-                    <option value="low_480p">⚡ 低遅延 480p</option>
+                    <option value="original" data-i18n="standardQuality">🎥 Standard Quality (1080p)</option>
+                    <option value="low_720p" data-i18n="enhanced720p">⚡ Enhanced 720p</option>
+                    <option value="low_480p" data-i18n="enhanced480p">⚡ Enhanced 480p</option>
                 </select>
             </div>
             
@@ -38,8 +41,8 @@
             
             <!-- 状態表示 (一番右) -->
             <div class="status-indicator-group" style="margin-left: auto; display: flex; align-items: flex-end;">
-                <span class="label" style="font-size: 0.8em;">状態:</span>
-                <span id="status" class="value" style="font-size: 0.8em;">未接続</span>
+                <span class="label" style="font-size: 0.8em;" data-i18n="status">Status:</span>
+                <span id="status" class="value" style="font-size: 0.8em;" data-i18n="disconnected">Disconnected</span>
             </div>
         </div>
 
@@ -49,17 +52,17 @@
 
         <!-- シンプルなデバッグ情報 -->
         <div class="debug-info" style="margin-top: 10px; padding: 8px; background: rgba(42, 42, 42, 0.6); border-radius: 6px; font-family: monospace; font-size: 11px;">
-            <div style="color: #4a9eff;">🔍 デバッグ: <span id="flvStatus">チェック中...</span> | プレイヤー: <span id="playerStatus">未初期化</span></div>
+            <div style="color: #4a9eff;">🔍 <span data-i18n="debug">Debug</span>: <span id="flvStatus" data-i18n="checking">Checking...</span> | <span data-i18n="player">Player</span>: <span id="playerStatus" data-i18n="uninitialized">Uninitialized</span></div>
         </div>
     </div>
 
     <!-- ログパネル -->
     <div id="logPanel" class="log-panel">
         <div class="log-header">
-            <span>📋 システムログ</span>
+            <span>📋 <span data-i18n="systemLog">System Log</span></span>
             <div class="log-controls">
-                <button id="clearLogBtn" title="ログをクリア">🗑️</button>
-                <button id="toggleLogBtn" title="ログパネルを折りたたむ">▼</button>
+                <button id="clearLogBtn" data-i18n-title="clearLog" title="Clear Log">🗑️</button>
+                <button id="toggleLogBtn" data-i18n-title="toggleLog" title="Toggle Log Panel">▼</button>
             </div>
         </div>
         <div id="logContent" class="log-content"></div>
@@ -68,6 +71,153 @@
 
     <script src="flv.min.js?v=1"></script>
     <script>
+        // 多言語対応データ
+        const translations = {
+            en: {
+                connectionGuide: "⚙️ Connection Guide",
+                loading: "Loading...",
+                rtmpHelp: "RTMP URL Help",
+                quality: "Quality:",
+                standardQuality: "🎥 Standard Quality (1080p)",
+                enhanced720p: "⚡ Enhanced 720p", 
+                enhanced480p: "⚡ Enhanced 480p",
+                status: "Status:",
+                disconnected: "Disconnected",
+                debug: "Debug",
+                checking: "Checking...",
+                player: "Player",
+                uninitialized: "Uninitialized",
+                systemLog: "System Log",
+                clearLog: "Clear Log",
+                toggleLog: "Toggle Log Panel",
+                // ステータスメッセージ
+                connected: "Connected",
+                connecting: "Connecting...",
+                error: "Error",
+                stopped: "Stopped",
+                preparing: "Preparing...",
+                ready: "Ready",
+                streaming: "Streaming",
+                metadataReceived: "Metadata Received",
+                loadingComplete: "Loading Complete",
+                resetComplete: "Reset Complete",
+                playerInitializing: "Player Initializing...",
+                playerError: "Player Error",
+                streamNotFound: "Stream Not Found",
+                videoElementNotFound: "Video Element Not Found",
+                streamUrlNotSet: "Stream URL Not Set",
+                rtmpUrlCopied: "RTMP URL copied to clipboard!",
+                copyFailed: "Failed to copy URL",
+                flvLibraryError: "flv.js library error - please reload the page",
+                browserNotSupported: "This browser does not support FLV playback",
+                flvLibraryAvailable: "flv.js is available",
+                streamDetected: "Stream detected - auto connecting...",
+                streamEnded: "Stream ended",
+                autoplayFailed: "Auto-play failed: click play button manually"
+            },
+            ja: {
+                connectionGuide: "⚙️ 接続方法",
+                loading: "読み込み中...",
+                rtmpHelp: "RTMP URLのヘルプ",
+                quality: "品質:",
+                standardQuality: "🎥 標準品質 (1080p)",
+                enhanced720p: "⚡ 低遅延 720p",
+                enhanced480p: "⚡ 低遅延 480p", 
+                status: "状態:",
+                disconnected: "未接続",
+                debug: "デバッグ",
+                checking: "チェック中...",
+                player: "プレイヤー",
+                uninitialized: "未初期化",
+                systemLog: "システムログ",
+                clearLog: "ログをクリア",
+                toggleLog: "ログパネルを折りたたむ",
+                // ステータスメッセージ
+                connected: "接続済み",
+                connecting: "接続中...",
+                error: "エラー",
+                stopped: "停止",
+                preparing: "準備中...",
+                ready: "準備完了",
+                streaming: "再生中",
+                metadataReceived: "メタデータ受信完了",
+                loadingComplete: "読み込み完了",
+                resetComplete: "リセット完了",
+                playerInitializing: "プレイヤー初期化中...",
+                playerError: "プレイヤー作成エラー",
+                streamNotFound: "ビデオ要素が見つかりません",
+                videoElementNotFound: "ビデオ要素が見つかりません",
+                streamUrlNotSet: "ストリームURLが設定されていません",
+                rtmpUrlCopied: "RTMP URLをクリップボードにコピーしました！",
+                copyFailed: "URLのコピーに失敗しました",
+                flvLibraryError: "flv.js ライブラリエラー - ページを再読み込みしてください",
+                browserNotSupported: "このブラウザはFLV再生をサポートしていません",
+                flvLibraryAvailable: "flv.js が正常に利用可能です",
+                streamDetected: "ストリーム検出 - 自動接続中...",
+                streamEnded: "ストリーム終了",
+                autoplayFailed: "手動で再生ボタンをクリック"
+            }
+        };
+
+        // 現在の言語（デフォルト英語）
+        let currentLanguage = localStorage.getItem('language') || 'en';
+
+        // 言語切り替え関数
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'ja' : 'en';
+            localStorage.setItem('language', currentLanguage);
+            updateLanguage();
+            updateLanguageButton();
+        }
+
+        // 言語更新関数
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            
+            // data-i18n属性を持つ要素を更新
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (t[key]) {
+                    if (element.tagName === 'OPTION') {
+                        element.textContent = t[key];
+                    } else {
+                        element.textContent = t[key];
+                    }
+                }
+            });
+
+            // data-i18n-title属性を持つ要素のtitle更新
+            document.querySelectorAll('[data-i18n-title]').forEach(element => {
+                const key = element.getAttribute('data-i18n-title');
+                if (t[key]) {
+                    element.title = t[key];
+                }
+            });
+
+            // html要素のlang属性更新
+            document.documentElement.lang = currentLanguage;
+        }
+
+        // 言語ボタン更新
+        function updateLanguageButton() {
+            const button = document.getElementById('languageToggle');
+            if (button) {
+                button.textContent = currentLanguage === 'en' ? '🌐 EN' : '🌐 日本語';
+            }
+        }
+
+        // 翻訳関数（JavaScriptから呼び出し用）
+        function t(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        // 初期化
+        updateLanguage();
+        updateLanguageButton();
+
+        // 言語切り替えボタンのイベントリスナー
+        document.getElementById('languageToggle').addEventListener('click', toggleLanguage);
+
         // シンプルなデバッグ情報更新
         const flvStatusElement = document.getElementById('flvStatus');
         const playerStatusElement = document.getElementById('playerStatus');
@@ -93,7 +243,7 @@
         // flv.js チェック
         if (typeof flvjs === 'undefined') {
             console.error('❌ flv.js failed to load');
-            document.body.innerHTML += '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:red;color:white;padding:20px;border-radius:10px;z-index:9999;font-weight:bold;">⚠️ flv.js ライブラリの読み込みに失敗しました<br/><br/>🔄 ページを強制リロード (Ctrl+F5) してください</div>';
+            document.body.innerHTML += `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:red;color:white;padding:20px;border-radius:10px;z-index:9999;font-weight:bold;">⚠️ ${t('flvLibraryError')}</div>`;
         } else {
             console.log('✅ flv.js loaded successfully');
         }

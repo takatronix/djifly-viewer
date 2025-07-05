@@ -44,20 +44,20 @@ function debugLog(message, type = 'info') {
 function checkFlvJsAvailability() {
     if (typeof flvjs === 'undefined') {
         console.error('❌ flv.js is not available');
-        debugLog('flv.js ライブラリが利用できません', 'error');
-        updateStatus('flv.js ライブラリエラー - ページを再読み込みしてください', 'error');
+        debugLog(t('flvLibraryError'), 'error');
+        updateStatus(t('flvLibraryError'), 'error');
         return false;
     }
     
     if (!flvjs.isSupported()) {
         console.error('❌ flv.js is not supported in this browser');
-        debugLog('このブラウザはFLV再生をサポートしていません', 'error');
-        updateStatus('このブラウザはFLV再生をサポートしていません', 'error');
+        debugLog(t('browserNotSupported'), 'error');
+        updateStatus(t('browserNotSupported'), 'error');
         return false;
     }
     
     console.log('✅ flv.js is available and supported');
-    debugLog('flv.js が正常に利用可能です', 'success');
+    debugLog(t('flvLibraryAvailable'), 'success');
     return true;
 }
 
@@ -111,7 +111,7 @@ async function playStream() {
         const [latencyType, resolution] = mode.split('_');
         
         debugLog(`Starting latency mode: ${latencyType}, resolution: ${resolution}`, 'info');
-        updateStatus(`${resolution} 準備中...`, 'connecting');
+        updateStatus(`${resolution} ${t('preparing')}`, 'connecting');
         
         try {
             // Start latency mode with proper stream availability check
@@ -125,7 +125,7 @@ async function playStream() {
             } else {
                 // 低遅延モードが失敗した場合、すぐにフォールバック
                 debugLog('Low latency mode failed, falling back to original stream', 'warning');
-                updateStatus('低遅延モード失敗 - 標準品質で再生', 'warning');
+                updateStatus(t('error') + ' - ' + t('standardQuality'), 'warning');
                 
                 newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
                 setTimeout(() => {
@@ -135,7 +135,7 @@ async function playStream() {
         } catch (error) {
             console.error('Failed to start latency mode:', error);
             debugLog(`Failed to start latency mode: ${error.message}`, 'error');
-            updateStatus('低遅延モード開始に失敗 - 標準品質で再生', 'error');
+            updateStatus(t('error') + ' - ' + t('standardQuality'), 'error');
             
             // Fallback to original stream
             newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
@@ -183,7 +183,7 @@ function forceResetPlayer() {
         window.playerResetTimer = null;
     }
     
-    updateStatus('リセット完了', '');
+    updateStatus(t('resetComplete'), '');
     debugLog('Force reset completed', 'success');
 }
 
@@ -196,7 +196,7 @@ function stopStream() {
         method: 'POST'
     }).catch(() => {});
     
-    updateStatus('停止', '');
+    updateStatus(t('stopped'), '');
 }
 
 function startNewStream(url) {
@@ -233,19 +233,19 @@ function createNewPlayer() {
     if (!videoElement) {
         debugLog('Video element not found, aborting', 'error');
         isInitializing = false;
-        updateStatus('ビデオ要素が見つかりません', 'error');
+        updateStatus(t('videoElementNotFound'), 'error');
         return;
     }
     
     if (!streamUrl) {
         debugLog('Stream URL not set, aborting', 'error');
         isInitializing = false;
-        updateStatus('ストリームURLが設定されていません', 'error');
+        updateStatus(t('streamUrlNotSet'), 'error');
         return;
     }
     
     debugLog(`Creating player for URL: ${streamUrl}`, 'info');
-    updateStatus('プレイヤー初期化中...', '');
+    updateStatus(t('playerInitializing'), '');
     
     try {
         // シンプルなflv.js プレイヤー作成
@@ -269,7 +269,7 @@ function createNewPlayer() {
         // 最小限のエラーハンドリング（再試行を無効化）
         flvPlayer.on(flvjs.Events.ERROR, (errorType, errorDetail, errorInfo) => {
             debugLog(`Player error: ${errorType} - ${errorDetail}`, 'error');
-            updateStatus(`エラー: ${errorDetail}`, 'error');
+            updateStatus(`${t('error')}: ${errorDetail}`, 'error');
             
             // 再試行ロジックを完全に無効化 - 無限ループの原因
             debugLog('Error occurred - stopping player (no retry)', 'warning');
@@ -303,17 +303,17 @@ function createNewPlayer() {
         // メタデータ受信時の処理
         flvPlayer.on(flvjs.Events.METADATA_ARRIVED, (metadata) => {
             debugLog('Metadata arrived - starting playback', 'success');
-            updateStatus('メタデータ受信完了', 'connected');
+            updateStatus(t('metadataReceived'), 'connected');
             
             // 500ms後に自動再生を試行
             setTimeout(() => {
                 if (flvPlayer) {
                     flvPlayer.play().then(() => {
                         debugLog('Auto-play started', 'success');
-                        updateStatus('再生中', 'connected');
+                        updateStatus(t('streaming'), 'connected');
                     }).catch(err => {
                         debugLog(`Auto-play failed: ${err.message}`, 'warning');
-                        updateStatus('手動で再生ボタンをクリック', '');
+                        updateStatus(t('autoplayFailed'), '');
                     });
                 }
             }, 500);
@@ -322,7 +322,7 @@ function createNewPlayer() {
         // 読み込み完了
         flvPlayer.on(flvjs.Events.LOADING_COMPLETE, () => {
             debugLog('Loading complete', 'success');
-            updateStatus('読み込み完了', 'connected');
+            updateStatus(t('loadingComplete'), 'connected');
             retryCount = 0;
         });
         
@@ -339,7 +339,7 @@ function createNewPlayer() {
     } catch (error) {
         debugLog(`Player creation failed: ${error.message}`, 'error');
         console.error('Player creation error:', error);
-        updateStatus('プレイヤー作成エラー', 'error');
+        updateStatus(t('playerError'), 'error');
         
         // 失敗時にnullを設定
         flvPlayer = null;
@@ -403,7 +403,7 @@ async function startLatencyModeWithCheck(streamKey, resolution) {
         let retries = 0;
         
         debugLog(`Checking stream availability for: ${streamPath}`, 'info');
-        updateStatus(`${resolution} ストリーム準備中... (${retries}/${maxRetries})`, 'connecting');
+        updateStatus(`${resolution} ${t('preparing')} (${retries}/${maxRetries})`, 'connecting');
         
         while (retries < maxRetries) {
             try {
@@ -420,7 +420,7 @@ async function startLatencyModeWithCheck(streamKey, resolution) {
                 
                 if (checkResponse.ok || checkResponse.status === 200) {
                     debugLog(`Stream is ready: ${streamPath}`, 'success');
-                    updateStatus(`${resolution} ストリーム準備完了`, 'connected');
+                    updateStatus(`${resolution} ${t('ready')}`, 'connected');
                     return true;
                 }
             } catch (error) {
@@ -429,14 +429,14 @@ async function startLatencyModeWithCheck(streamKey, resolution) {
             }
             
             retries++;
-            updateStatus(`${resolution} ストリーム準備中... (${retries}/${maxRetries})`, 'connecting');
+            updateStatus(`${resolution} ${t('preparing')} (${retries}/${maxRetries})`, 'connecting');
             
             // 500ms待機
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         
         debugLog(`Stream availability check timed out: ${streamPath}`, 'error');
-        updateStatus(`${resolution} ストリーム準備タイムアウト`, 'error');
+        updateStatus(`${resolution} ${t('error')}`, 'error');
         return false;
         
     } catch (error) {
@@ -561,7 +561,7 @@ function checkAndAutoConnect() {
                 (now - autoPlayState.lastAttempt) > autoPlayState.cooldownPeriod) {
                 
                 console.log(`🎥 Auto-connecting to stream (${mode} mode)...`);
-                updateStatus('ストリーム検出 - 自動接続中...', 'connecting');
+                updateStatus(t('streamDetected'), 'connecting');
                 autoPlayState.lastAttempt = now;
                 
                 // 低遅延モードの場合は少し長めに待つ
@@ -575,7 +575,7 @@ function checkAndAutoConnect() {
             if (streams.length === 0 && flvPlayer) {
                 console.log('❌ No streams available, stopping player');
                 stopStream();
-                updateStatus('ストリーム終了', '');
+                updateStatus(t('streamEnded'), '');
             }
             
             lastStreamCount = streams.length;
@@ -789,13 +789,13 @@ function copyRtmpUrl() {
     
     const url = rtmpUrlElement.textContent;
     navigator.clipboard.writeText(url).then(() => {
-        updateStatus('RTMP URLをクリップボードにコピーしました！', 'connected');
+        updateStatus(t('rtmpUrlCopied'), 'connected');
         setTimeout(() => {
-            updateStatus('未接続', '');
+            updateStatus(t('disconnected'), '');
         }, 2000);
     }).catch(err => {
         console.error('Failed to copy: ', err);
-        updateStatus('URLのコピーに失敗しました', 'error');
+        updateStatus(t('copyFailed'), 'error');
     });
 }
 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DJI Goggles 3 接続方法 - DJI Fly Stream Viewer</title>
+    <title data-i18n="pageTitle">DJI Goggles 3 Connection Guide - DJI Fly Stream Viewer</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .guide-container {
@@ -15,6 +15,24 @@
         .guide-header {
             text-align: center;
             margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .language-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .language-toggle:hover {
+            background-color: #1976d2;
         }
         
         .guide-header h1 {
@@ -184,26 +202,27 @@
 <body>
     <div class="guide-container">
         <div class="guide-header">
-            <h1>🚁 DJI Goggles 3 接続方法</h1>
-            <p class="subtitle">スマートフォンをケーブルで接続してライブストリーミングを開始</p>
+            <button class="language-toggle" onclick="toggleLanguage()" id="languageBtn">🌐 EN</button>
+            <h1 data-i18n="guideTitle">🚁 DJI Goggles 3 Connection Guide</h1>
+            <p class="subtitle" data-i18n="guideSubtitle">Connect your smartphone via cable to start live streaming</p>
         </div>
 
         <div class="step-container">
             <div class="step-header">
                 <div class="step-number">1</div>
-                <div class="step-title">必要なケーブルを準備</div>
+                <div class="step-title" data-i18n="step1Title">Prepare Required Cable</div>
             </div>
             <div class="step-content">
-                <p>DJI Goggles 3とスマートフォンを接続するためのケーブルを準備します。スマートフォンのタイプに応じて適切なケーブルを選択してください。</p>
+                <p data-i18n="step1Content">Prepare a cable to connect DJI Goggles 3 and your smartphone. Choose the appropriate cable according to your smartphone type.</p>
                 
                 <div class="cable-types">
                     <div class="cable-type">
-                        <h4>📱 Android / iPhone 15以降</h4>
-                        <p><strong>USB-C to USB-C ケーブル</strong><br>両端がUSB-C端子のケーブルを使用</p>
+                        <h4 data-i18n="androidIPhone15">📱 Android / iPhone 15+</h4>
+                        <p data-i18n="usbCCable"><strong>USB-C to USB-C Cable</strong><br>Use a cable with USB-C connectors on both ends</p>
                     </div>
                     <div class="cable-type">
-                        <h4>📱 iPhone 14以前</h4>
-                        <p><strong>Lightning to USB-C ケーブル</strong><br>iPhone側: Lightning<br>DJI Goggles 3側: USB-C</p>
+                        <h4 data-i18n="iPhone14Earlier">📱 iPhone 14 and Earlier</h4>
+                        <p data-i18n="lightningCable"><strong>Lightning to USB-C Cable</strong><br>iPhone side: Lightning<br>DJI Goggles 3 side: USB-C</p>
                     </div>
                 </div>
             </div>
@@ -212,22 +231,22 @@
         <div class="step-container">
             <div class="step-header">
                 <div class="step-number">2</div>
-                <div class="step-title">DJI Goggles 3の電源を入れる</div>
+                <div class="step-title" data-i18n="step2Title">Power On DJI Goggles 3</div>
             </div>
             <div class="step-content">
-                <p>DJI Goggles 3の電源ボタンを長押しして電源を入れます。起動完了まで約30秒程度お待ちください。</p>
+                <p data-i18n="step2Content">Press and hold the power button on DJI Goggles 3 to turn it on. Wait about 30 seconds for startup to complete.</p>
                 
                 <div class="step-image">
                     <div style="background: #333; padding: 30px; border-radius: 8px; text-align: center;">
                         <div style="font-size: 72px;">🥽</div>
-                        <div style="color: #4a9eff; margin-top: 10px; font-size: 18px;">⏻ 電源ボタン長押し</div>
-                        <div style="color: #888; margin-top: 10px;">約30秒で起動完了</div>
+                        <div style="color: #4a9eff; margin-top: 10px; font-size: 18px;" data-i18n="powerButton">⏻ Press and hold power button</div>
+                        <div style="color: #888; margin-top: 10px;" data-i18n="startupTime">About 30 seconds to complete startup</div>
                     </div>
                 </div>
                 
                 <div class="tip-box">
-                    <h4>💡 ヒント</h4>
-                    <p>初回起動時は設定画面が表示される場合があります。基本設定を完了してからケーブル接続を行ってください。</p>
+                    <h4 data-i18n="tip">💡 Tip</h4>
+                    <p data-i18n="firstStartupTip">A setup screen may appear on first startup. Complete the basic setup before connecting the cable.</p>
                 </div>
             </div>
         </div>
@@ -235,17 +254,17 @@
         <div class="step-container">
             <div class="step-header">
                 <div class="step-number">3</div>
-                <div class="step-title">スマートフォンとケーブル接続</div>
+                <div class="step-title" data-i18n="step3Title">Connect Smartphone with Cable</div>
             </div>
             <div class="step-content">
-                <p>準備したケーブルを使用してスマートフォンとDJI Goggles 3を接続します。</p>
+                <p data-i18n="step3Content">Use the prepared cable to connect your smartphone and DJI Goggles 3.</p>
                 
                 <div class="step-image">
                     <div style="background: #333; padding: 40px; border-radius: 8px; text-align: center;">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 30px;">
                             <div style="background: #222; padding: 20px; border-radius: 8px;">
                                 <div style="font-size: 48px;">📱</div>
-                                <div style="color: #888; margin-top: 10px;">スマートフォン</div>
+                                <div style="color: #888; margin-top: 10px;" data-i18n="smartphone">Smartphone</div>
                             </div>
                             <div style="color: #4a9eff; font-size: 24px;">━━━━━</div>
                             <div style="background: #222; padding: 20px; border-radius: 8px;">
@@ -253,13 +272,13 @@
                                 <div style="color: #888; margin-top: 10px;">DJI Goggles 3</div>
                             </div>
                         </div>
-                        <div style="color: #4a9eff; margin-top: 20px;">USB-Cケーブルで接続</div>
+                        <div style="color: #4a9eff; margin-top: 20px;" data-i18n="usbConnection">Connect with USB-C cable</div>
                     </div>
                 </div>
                 
                 <div class="warning-box">
-                    <h4>⚠️ 注意</h4>
-                    <p>ケーブルは確実に差し込んでください。接続が不安定だとデータ転送が途切れる可能性があります。</p>
+                    <h4 data-i18n="warning">⚠️ Warning</h4>
+                    <p data-i18n="connectionWarning">Make sure the cable is securely inserted. Unstable connections may cause data transfer interruptions.</p>
                 </div>
             </div>
         </div>
@@ -267,15 +286,14 @@
         <div class="step-container">
             <div class="step-header">
                 <div class="step-number">4</div>
-                <div class="step-title">DJI Flyアプリを起動</div>
+                <div class="step-title" data-i18n="step4Title">Launch DJI Fly App</div>
             </div>
             <div class="step-content">
-                <p>スマートフォンでDJI Flyアプリを起動します。ケーブル接続が正常に行われていると、アプリが自動的にDJI Goggles 3を認識します。</p>
-                
+                <p data-i18n="step4Content">Launch the DJI Fly app on your smartphone. If the cable connection is successful, the app will automatically recognize DJI Goggles 3.</p>
                 
                 <div class="tip-box">
-                    <h4>💡 接続確認</h4>
-                    <p>アプリ上部にGoggles 3のアイコンが表示されていれば接続成功です。</p>
+                    <h4 data-i18n="connectionCheck">💡 Connection Check</h4>
+                    <p data-i18n="connectionCheckTip">If the Goggles 3 icon appears at the top of the app, the connection is successful.</p>
                 </div>
             </div>
         </div>
@@ -283,26 +301,25 @@
         <div class="step-container">
             <div class="step-header">
                 <div class="step-number">5</div>
-                <div class="step-title">ライブストリーミング設定</div>
+                <div class="step-title" data-i18n="step5Title">Live Streaming Settings</div>
             </div>
             <div class="step-content">
-                <p>DJI Flyアプリでライブストリーミングの設定を行います。</p>
-                
+                <p data-i18n="step5Content">Configure live streaming settings in the DJI Fly app.</p>
                 
                 <ol style="color: #ccc; margin-left: 20px;">
-                    <li>DJI Flyアプリ内の設定メニューを開く</li>
-                    <li>「ライブストリーミング」または「Live Streaming」を選択</li>
-                    <li>「カスタムRTMP」を選択</li>
-                    <li>以下のRTMP URLを入力</li>
+                    <li data-i18n="settingsStep1">Open the settings menu in the DJI Fly app</li>
+                    <li data-i18n="settingsStep2">Select "Live Streaming"</li>
+                    <li data-i18n="settingsStep3">Select "Custom RTMP"</li>
+                    <li data-i18n="settingsStep4">Enter the following RTMP URL</li>
                 </ol>
                 
                 <div class="rtmp-url-display">
-                    rtmp://[このアプリのIPアドレス]:1935/live/stream
+                    rtmp://[This app's IP address]:1935/live/s
                 </div>
                 
                 <div class="tip-box">
-                    <h4>💡 IPアドレスの確認方法</h4>
-                    <p>このアプリのメイン画面に表示されているRTMP URLをそのままコピーして使用してください。通常は「rtmp://192.168.x.x:1935/live/stream」のような形式になります。</p>
+                    <h4 data-i18n="ipAddressCheck">💡 How to Check IP Address</h4>
+                    <p data-i18n="ipAddressTip">Copy and use the RTMP URL displayed on this app's main screen. It will usually be in the format "rtmp://192.168.x.x:1935/live/s".</p>
                 </div>
             </div>
         </div>
@@ -310,10 +327,10 @@
         <div class="step-container">
             <div class="step-header">
                 <div class="step-number">6</div>
-                <div class="step-title">ストリーミング開始</div>
+                <div class="step-title" data-i18n="step6Title">Start Streaming</div>
             </div>
             <div class="step-content">
-                <p>全ての設定が完了したら、ライブストリーミングを開始します。</p>
+                <p data-i18n="step6Content">Once all settings are complete, start live streaming.</p>
                 
                 <div class="step-image">
                     <div style="background: #333; padding: 30px; border-radius: 8px; text-align: center;">
@@ -321,32 +338,177 @@
                             GO LIVE
                         </div>
                         <div style="color: #888; margin-top: 15px;">↓</div>
-                        <div style="color: #4aff4a; margin-top: 10px;">配信開始！</div>
+                        <div style="color: #4aff4a; margin-top: 10px;" data-i18n="streamingStarted">Streaming Started!</div>
                     </div>
                 </div>
                 
                 <div class="tip-box">
-                    <h4>💡 確認方法</h4>
-                    <p>このアプリのメイン画面に戻って「配信再生」ボタンを押すと、ライブ映像が表示されます。</p>
+                    <h4 data-i18n="verificationMethod">💡 Verification Method</h4>
+                    <p data-i18n="verificationTip">Return to this app's main screen and the live video will be displayed automatically.</p>
                 </div>
             </div>
         </div>
 
         <div class="streaming-info">
-            <h3>🎥 ストリーミング情報</h3>
-            <p><strong>RTMP URL:</strong></p>
-            <div class="rtmp-url-display">rtmp://[このアプリのIPアドレス]:1935/live/stream</div>
-            <p><strong>推奨設定:</strong></p>
+            <h3 data-i18n="streamingInfo">🎥 Streaming Information</h3>
+            <p><strong data-i18n="rtmpUrl">RTMP URL:</strong></p>
+            <div class="rtmp-url-display">rtmp://[This app's IP address]:1935/live/s</div>
+            <p><strong data-i18n="recommendedSettings">Recommended Settings:</strong></p>
             <ul style="color: #ccc; margin-left: 20px;">
-                <li>解像度: 1080p (高品質) または 720p (安定性重視)</li>
-                <li>ビットレート: 2-4 Mbps</li>
-                <li>フレームレート: 30fps</li>
+                <li data-i18n="resolution">Resolution: 1080p (high quality) or 720p (stability focus)</li>
+                <li data-i18n="bitrate">Bitrate: 2-4 Mbps</li>
+                <li data-i18n="framerate">Frame Rate: 30fps</li>
             </ul>
         </div>
 
-        <button class="back-button" onclick="window.history.back()">
-            ← メイン画面に戻る
+        <button class="back-button" onclick="window.history.back()" data-i18n="backButton">
+            ← Back to Main Screen
         </button>
     </div>
+
+    <script>
+        // 多言語対応データ
+        const translations = {
+            en: {
+                pageTitle: "DJI Goggles 3 Connection Guide - DJI Fly Stream Viewer",
+                guideTitle: "🚁 DJI Goggles 3 Connection Guide",
+                guideSubtitle: "Connect your smartphone via cable to start live streaming",
+                step1Title: "Prepare Required Cable",
+                step1Content: "Prepare a cable to connect DJI Goggles 3 and your smartphone. Choose the appropriate cable according to your smartphone type.",
+                androidIPhone15: "📱 Android / iPhone 15+",
+                usbCCable: "<strong>USB-C to USB-C Cable</strong><br>Use a cable with USB-C connectors on both ends",
+                iPhone14Earlier: "📱 iPhone 14 and Earlier", 
+                lightningCable: "<strong>Lightning to USB-C Cable</strong><br>iPhone side: Lightning<br>DJI Goggles 3 side: USB-C",
+                step2Title: "Power On DJI Goggles 3",
+                step2Content: "Press and hold the power button on DJI Goggles 3 to turn it on. Wait about 30 seconds for startup to complete.",
+                powerButton: "⏻ Press and hold power button",
+                startupTime: "About 30 seconds to complete startup",
+                tip: "💡 Tip",
+                firstStartupTip: "A setup screen may appear on first startup. Complete the basic setup before connecting the cable.",
+                step3Title: "Connect Smartphone with Cable",
+                step3Content: "Use the prepared cable to connect your smartphone and DJI Goggles 3.",
+                smartphone: "Smartphone",
+                usbConnection: "Connect with USB-C cable",
+                warning: "⚠️ Warning",
+                connectionWarning: "Make sure the cable is securely inserted. Unstable connections may cause data transfer interruptions.",
+                step4Title: "Launch DJI Fly App",
+                step4Content: "Launch the DJI Fly app on your smartphone. If the cable connection is successful, the app will automatically recognize DJI Goggles 3.",
+                connectionCheck: "💡 Connection Check",
+                connectionCheckTip: "If the Goggles 3 icon appears at the top of the app, the connection is successful.",
+                step5Title: "Live Streaming Settings",
+                step5Content: "Configure live streaming settings in the DJI Fly app.",
+                settingsStep1: "Open the settings menu in the DJI Fly app",
+                settingsStep2: "Select \"Live Streaming\"",
+                settingsStep3: "Select \"Custom RTMP\"",
+                settingsStep4: "Enter the following RTMP URL",
+                ipAddressCheck: "💡 How to Check IP Address",
+                ipAddressTip: "Copy and use the RTMP URL displayed on this app's main screen. It will usually be in the format \"rtmp://192.168.x.x:1935/live/s\".",
+                step6Title: "Start Streaming",
+                step6Content: "Once all settings are complete, start live streaming.",
+                streamingStarted: "Streaming Started!",
+                verificationMethod: "💡 Verification Method", 
+                verificationTip: "Return to this app's main screen and the live video will be displayed automatically.",
+                streamingInfo: "🎥 Streaming Information",
+                rtmpUrl: "RTMP URL:",
+                recommendedSettings: "Recommended Settings:",
+                resolution: "Resolution: 1080p (high quality) or 720p (stability focus)",
+                bitrate: "Bitrate: 2-4 Mbps",
+                framerate: "Frame Rate: 30fps",
+                backButton: "← Back to Main Screen"
+            },
+            ja: {
+                pageTitle: "DJI Goggles 3 接続方法 - DJI Fly Stream Viewer",
+                guideTitle: "🚁 DJI Goggles 3 接続方法",
+                guideSubtitle: "スマートフォンをケーブルで接続してライブストリーミングを開始",
+                step1Title: "必要なケーブルを準備",
+                step1Content: "DJI Goggles 3とスマートフォンを接続するためのケーブルを準備します。スマートフォンのタイプに応じて適切なケーブルを選択してください。",
+                androidIPhone15: "📱 Android / iPhone 15以降",
+                usbCCable: "<strong>USB-C to USB-C ケーブル</strong><br>両端がUSB-C端子のケーブルを使用",
+                iPhone14Earlier: "📱 iPhone 14以前",
+                lightningCable: "<strong>Lightning to USB-C ケーブル</strong><br>iPhone側: Lightning<br>DJI Goggles 3側: USB-C",
+                step2Title: "DJI Goggles 3の電源を入れる",
+                step2Content: "DJI Goggles 3の電源ボタンを長押しして電源を入れます。起動完了まで約30秒程度お待ちください。",
+                powerButton: "⏻ 電源ボタン長押し",
+                startupTime: "約30秒で起動完了",
+                tip: "💡 ヒント",
+                firstStartupTip: "初回起動時は設定画面が表示される場合があります。基本設定を完了してからケーブル接続を行ってください。",
+                step3Title: "スマートフォンとケーブル接続",
+                step3Content: "準備したケーブルを使用してスマートフォンとDJI Goggles 3を接続します。",
+                smartphone: "スマートフォン",
+                usbConnection: "USB-Cケーブルで接続",
+                warning: "⚠️ 注意",
+                connectionWarning: "ケーブルは確実に差し込んでください。接続が不安定だとデータ転送が途切れる可能性があります。",
+                step4Title: "DJI Flyアプリを起動",
+                step4Content: "スマートフォンでDJI Flyアプリを起動します。ケーブル接続が正常に行われていると、アプリが自動的にDJI Goggles 3を認識します。",
+                connectionCheck: "💡 接続確認",
+                connectionCheckTip: "アプリ上部にGoggles 3のアイコンが表示されていれば接続成功です。",
+                step5Title: "ライブストリーミング設定",
+                step5Content: "DJI Flyアプリでライブストリーミングの設定を行います。",
+                settingsStep1: "DJI Flyアプリ内の設定メニューを開く",
+                settingsStep2: "「ライブストリーミング」または「Live Streaming」を選択",
+                settingsStep3: "「カスタムRTMP」を選択",
+                settingsStep4: "以下のRTMP URLを入力",
+                ipAddressCheck: "💡 IPアドレスの確認方法",
+                ipAddressTip: "このアプリのメイン画面に表示されているRTMP URLをそのままコピーして使用してください。通常は「rtmp://192.168.x.x:1935/live/s」のような形式になります。",
+                step6Title: "ストリーミング開始",
+                step6Content: "全ての設定が完了したら、ライブストリーミングを開始します。",
+                streamingStarted: "配信開始！",
+                verificationMethod: "💡 確認方法",
+                verificationTip: "このアプリのメイン画面に戻ると、ライブ映像が自動的に表示されます。",
+                streamingInfo: "🎥 ストリーミング情報",
+                rtmpUrl: "RTMP URL:",
+                recommendedSettings: "推奨設定:",
+                resolution: "解像度: 1080p (高品質) または 720p (安定性重視)",
+                bitrate: "ビットレート: 2-4 Mbps",
+                framerate: "フレームレート: 30fps",
+                backButton: "← メイン画面に戻る"
+            }
+        };
+
+        // 現在の言語（デフォルト英語）
+        let currentLanguage = localStorage.getItem('guide_language') || 'en';
+
+        // 言語切り替え関数
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'ja' : 'en';
+            localStorage.setItem('guide_language', currentLanguage);
+            updateLanguage();
+            updateLanguageButton();
+        }
+
+        // 言語更新関数
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            
+            // data-i18n属性を持つ要素を更新
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (t[key]) {
+                    if (element.tagName === 'TITLE') {
+                        element.textContent = t[key];
+                    } else {
+                        element.innerHTML = t[key];
+                    }
+                }
+            });
+
+            // html要素のlang属性更新
+            document.documentElement.lang = currentLanguage;
+        }
+
+        // 言語ボタン更新
+        function updateLanguageButton() {
+            const button = document.getElementById('languageBtn');
+            if (button) {
+                button.textContent = currentLanguage === 'en' ? '🌐 EN' : '🌐 日本語';
+            }
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLanguage();
+            updateLanguageButton();
+        });
+    </script>
 </body>
 </html>
