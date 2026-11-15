@@ -69,7 +69,7 @@
         <div id="logResizer" class="log-resizer"></div>
     </div>
 
-    <script src="flv.min.js?v=1"></script>
+    <script src="mpegts.js?v=1"></script>
     <script>
         // 多言語対応データ
         const translations = {
@@ -108,9 +108,9 @@
                 streamUrlNotSet: "Stream URL Not Set",
                 rtmpUrlCopied: "RTMP URL copied to clipboard!",
                 copyFailed: "Failed to copy URL",
-                flvLibraryError: "flv.js library error - please reload the page",
+                flvLibraryError: "mpegts.js library error - please reload the page",
                 browserNotSupported: "This browser does not support FLV playback",
-                flvLibraryAvailable: "flv.js is available",
+                flvLibraryAvailable: "mpegts.js is available",
                 streamDetected: "Stream detected - auto connecting...",
                 streamEnded: "Stream ended",
                 autoplayFailed: "Auto-play failed: click play button manually"
@@ -150,9 +150,9 @@
                 streamUrlNotSet: "ストリームURLが設定されていません",
                 rtmpUrlCopied: "RTMP URLをクリップボードにコピーしました！",
                 copyFailed: "URLのコピーに失敗しました",
-                flvLibraryError: "flv.js ライブラリエラー - ページを再読み込みしてください",
+                flvLibraryError: "mpegts.js ライブラリエラー - ページを再読み込みしてください",
                 browserNotSupported: "このブラウザはFLV再生をサポートしていません",
-                flvLibraryAvailable: "flv.js が正常に利用可能です",
+                flvLibraryAvailable: "mpegts.js が正常に利用可能です",
                 streamDetected: "ストリーム検出 - 自動接続中...",
                 streamEnded: "ストリーム終了",
                 autoplayFailed: "手動で再生ボタンをクリック"
@@ -224,8 +224,8 @@
         
         function updateDebugInfo() {
             if (flvStatusElement) {
-                flvStatusElement.textContent = typeof flvjs !== 'undefined' ? 'OK' : 'ERROR';
-                flvStatusElement.style.color = typeof flvjs !== 'undefined' ? '#4aff4a' : '#ff4a4a';
+                flvStatusElement.textContent = typeof mpegts !== 'undefined' ? 'OK' : 'ERROR';
+                flvStatusElement.style.color = typeof mpegts !== 'undefined' ? '#4aff4a' : '#ff4a4a';
             }
             if (playerStatusElement) {
                 const hasPlayer = window.flvPlayer !== null && window.flvPlayer !== undefined;
@@ -240,12 +240,12 @@
         // 1秒毎に更新
         setInterval(updateDebugInfo, 1000);
         
-        // flv.js チェック
-        if (typeof flvjs === 'undefined') {
-            console.error('❌ flv.js failed to load');
+        // mpegts.js チェック
+        if (typeof mpegts === 'undefined') {
+            console.error('❌ mpegts.js failed to load');
             document.body.innerHTML += `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:red;color:white;padding:20px;border-radius:10px;z-index:9999;font-weight:bold;">⚠️ ${t('flvLibraryError')}</div>`;
         } else {
-            console.log('✅ flv.js loaded successfully');
+            console.log('✅ mpegts.js loaded successfully');
         }
     </script>
     <script src="app.js"></script>

@@ -40,23 +40,23 @@ function debugLog(message, type = 'info') {
     }
 }
 
-// Check if flv.js is available
+// Check if mpegts.js (flv.js successor, adds H.265/HEVC) is available
 function checkFlvJsAvailability() {
-    if (typeof flvjs === 'undefined') {
-        console.error('❌ flv.js is not available');
+    if (typeof mpegts === 'undefined') {
+        console.error('❌ mpegts.js is not available');
         debugLog(t('flvLibraryError'), 'error');
         updateStatus(t('flvLibraryError'), 'error');
         return false;
     }
     
-    if (!flvjs.isSupported()) {
-        console.error('❌ flv.js is not supported in this browser');
+    if (!mpegts.isSupported()) {
+        console.error('❌ mpegts.js is not supported in this browser');
         debugLog(t('browserNotSupported'), 'error');
         updateStatus(t('browserNotSupported'), 'error');
         return false;
     }
     
-    console.log('✅ flv.js is available and supported');
+    console.log('✅ mpegts.js is available and supported');
     debugLog(t('flvLibraryAvailable'), 'success');
     return true;
 }
@@ -225,7 +225,7 @@ function createNewPlayer() {
     
     // 基本的なチェック
     if (!checkFlvJsAvailability()) {
-        debugLog('flv.js not available, aborting', 'error');
+        debugLog('mpegts.js not available, aborting', 'error');
         isInitializing = false;
         return;
     }
@@ -248,10 +248,10 @@ function createNewPlayer() {
     updateStatus(t('playerInitializing'), '');
     
     try {
-        // シンプルなflv.js プレイヤー作成
-        debugLog('Creating simple flv.js player...', 'info');
+        // シンプルなmpegts.js プレイヤー作成
+        debugLog('Creating simple mpegts.js player...', 'info');
         
-        flvPlayer = flvjs.createPlayer({
+        flvPlayer = mpegts.createPlayer({
             type: 'flv',
             url: streamUrl,
             isLive: true
@@ -261,13 +261,13 @@ function createNewPlayer() {
         window.flvPlayer = flvPlayer;
         
         if (!flvPlayer) {
-            throw new Error('flvjs.createPlayer returned null');
+            throw new Error('mpegts.createPlayer returned null');
         }
         
         debugLog('Player created successfully', 'success');
         
         // 最小限のエラーハンドリング（再試行を無効化）
-        flvPlayer.on(flvjs.Events.ERROR, (errorType, errorDetail, errorInfo) => {
+        flvPlayer.on(mpegts.Events.ERROR, (errorType, errorDetail, errorInfo) => {
             debugLog(`Player error: ${errorType} - ${errorDetail}`, 'error');
             updateStatus(`${t('error')}: ${errorDetail}`, 'error');
             
@@ -277,8 +277,8 @@ function createNewPlayer() {
             
             // // 標準品質モードでのみリトライを許可
             // if (modeSelect && modeSelect.value === 'original' && 
-            //     (errorType === flvjs.ErrorTypes.NETWORK_ERROR || 
-            //      errorType === flvjs.ErrorTypes.MEDIA_ERROR)) {
+            //     (errorType === mpegts.ErrorTypes.NETWORK_ERROR || 
+            //      errorType === mpegts.ErrorTypes.MEDIA_ERROR)) {
             //     
             //     if (retryCount < MAX_RETRY) {
             //         retryCount++;
@@ -301,7 +301,7 @@ function createNewPlayer() {
         });
         
         // メタデータ受信時の処理
-        flvPlayer.on(flvjs.Events.METADATA_ARRIVED, (metadata) => {
+        flvPlayer.on(mpegts.Events.METADATA_ARRIVED, (metadata) => {
             debugLog('Metadata arrived - starting playback', 'success');
             updateStatus(t('metadataReceived'), 'connected');
             
@@ -320,7 +320,7 @@ function createNewPlayer() {
         });
         
         // 読み込み完了
-        flvPlayer.on(flvjs.Events.LOADING_COMPLETE, () => {
+        flvPlayer.on(mpegts.Events.LOADING_COMPLETE, () => {
             debugLog('Loading complete', 'success');
             updateStatus(t('loadingComplete'), 'connected');
             retryCount = 0;
@@ -872,7 +872,7 @@ window.playStream = playStream;
 // const urlParams = new URLSearchParams(window.location.search);
 // const autoPlay = urlParams.get('autoplay');
 // if (autoPlay === 'true') {
-//     // Wait for flv.js to load before auto-playing
+//     // Wait for mpegts.js to load before auto-playing
 //     setTimeout(() => {
 //         if (checkFlvJsAvailability()) {
 //             playStream();
