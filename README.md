@@ -107,6 +107,8 @@ The application will automatically detect the stream and start playback. You can
 | Frame Rate | 30fps |
 | Codec | H.264 |
 
+H.265/HEVC streams (for example Osmo Pocket 4) are also accepted: they play directly when the PC has an HEVC hardware decoder, otherwise the app converts them to H.264 on this PC (uses more CPU). Not yet tested with a real Osmo Pocket 4.
+
 ### Quality Modes
 
 - **🎥 Standard Quality (1080p)**: High quality with optimal stability

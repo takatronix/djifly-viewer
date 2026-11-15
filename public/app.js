@@ -18,6 +18,12 @@ let autoConnectEnabled = true;
 let streamUrl = 'http://localhost:8000/live/s.flv';
 let lastStreamCount = 0;
 
+// H.265 (e.g. Osmo Pocket 4) plays directly where the platform has an HEVC decoder,
+// otherwise through an H.264 copy made on this PC (server: /api/stream/compat)
+let sourceCodecs = { video: '', audio: '' };
+let hevcDirectFailed = false;
+let preparingStream = false;
+
 // シンプルな自動再生制御
 let autoPlayState = {
     lastAttempt: 0,
@@ -100,6 +106,17 @@ async function playStream() {
     if (mode === 'original') {
         // Standard original quality - use the actual working path
         newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
+
+        sourceCodecs = await fetchSourceCodecs(currentStreamKey);
+        debugLog(`Source codecs: video=${sourceCodecs.video || '?'} audio=${sourceCodecs.audio || '?'}`, 'info');
+        if (sourceCodecs.video === 'H265' && (hevcDirectFailed || !mpegts.getFeatureList().mseH265Playback)) {
+            updateStatus(t('hevcConverting'), 'connecting');
+            if (!await startCompatStreamWithCheck(currentStreamKey)) {
+                updateStatus(t('hevcConvertFailed'), 'error');
+                return;
+            }
+            newStreamUrl = `http://${window.location.hostname}:8000/live/${currentStreamKey}_h264.flv`;
+        }
         debugLog(`Using original quality stream: ${newStreamUrl}`, 'info');
         
         // Start stream immediately for original
@@ -269,7 +286,22 @@ function createNewPlayer() {
         // 最小限のエラーハンドリング（再試行を無効化）
         flvPlayer.on(mpegts.Events.ERROR, (errorType, errorDetail, errorInfo) => {
             debugLog(`Player error: ${errorType} - ${errorDetail}`, 'error');
-            updateStatus(`${t('error')}: ${errorDetail}`, 'error');
+
+            // The platform reported H.265 support but could not play it: switch to the H.264 copy once
+            if (errorType === mpegts.ErrorTypes.MEDIA_ERROR && sourceCodecs.video === 'H265' &&
+                !hevcDirectFailed && modeSelect && modeSelect.value === 'original' && !streamUrl.includes('_h264.flv')) {
+                hevcDirectFailed = true;
+                debugLog('H.265 direct playback failed - switching to H.264 conversion', 'warning');
+                forceResetPlayer();
+                setTimeout(() => playStream(), 500);
+                return;
+            }
+
+            if (errorDetail === mpegts.ErrorDetails.MEDIA_CODEC_UNSUPPORTED) {
+                updateStatus(`${t('codecUnsupported')} (video: ${sourceCodecs.video || '?'}, audio: ${sourceCodecs.audio || '?'})`, 'error');
+            } else {
+                updateStatus(`${t('error')}: ${errorDetail}`, 'error');
+            }
             
             // 再試行ロジックを完全に無効化 - 無限ループの原因
             debugLog('Error occurred - stopping player (no retry)', 'warning');
@@ -310,7 +342,7 @@ function createNewPlayer() {
                 if (flvPlayer) {
                     flvPlayer.play().then(() => {
                         debugLog('Auto-play started', 'success');
-                        updateStatus(t('streaming'), 'connected');
+                        updateStatus(t('streaming') + (streamUrl.includes('_h264.flv') ? ' (H.265 → H.264)' : ''), 'connected');
                     }).catch(err => {
                         debugLog(`Auto-play failed: ${err.message}`, 'warning');
                         updateStatus(t('autoplayFailed'), '');
@@ -447,6 +479,45 @@ async function startLatencyModeWithCheck(streamKey, resolution) {
 
 // Legacy low latency function removed - replaced with startLatencyModeWithCheck
 
+async function fetchSourceCodecs(streamKey) {
+    try {
+        const streams = await (await fetch('/api/streams')).json();
+        const source = streams.find(s => s.stream === streamKey);
+        return { video: (source && source.videoCodec) || '', audio: (source && source.audioCodec) || '' };
+    } catch (error) {
+        debugLog(`Failed to read source codecs: ${error.message}`, 'warning');
+        return { video: '', audio: '' };
+    }
+}
+
+// Start the H.264 copy of an H.265 source and wait until it is published (max 30s)
+async function startCompatStreamWithCheck(streamKey) {
+    const compatKey = `${streamKey}_h264`;
+    preparingStream = true;
+    try {
+        const response = await fetch(`/api/stream/compat/${streamKey}`, { method: 'POST' });
+        if (!response.ok) {
+            debugLog(`H.264 conversion API failed: ${response.status}`, 'error');
+            return false;
+        }
+        for (let i = 0; i < 60; i++) {
+            const streams = await (await fetch('/api/streams')).json();
+            if (streams.some(s => s.stream === compatKey)) {
+                debugLog(`H.264 conversion ready: ${compatKey}`, 'success');
+                return true;
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        debugLog(`H.264 conversion did not start: ${compatKey}`, 'error');
+        return false;
+    } catch (error) {
+        debugLog(`H.264 conversion failed: ${error.message}`, 'error');
+        return false;
+    } finally {
+        preparingStream = false;
+    }
+}
+
 async function stopLowLatency(streamKey) {
     try {
         const response = await fetch(`/api/stream/stop-low-latency/${streamKey}`, {
@@ -557,7 +628,7 @@ function checkAndAutoConnect() {
             
             // ストリームがあり、プレイヤーがなく、クールダウン期間を過ぎている場合のみ再生
             const now = Date.now();
-            if (streams.length > 0 && !flvPlayer && !isInitializing && 
+            if (streams.length > 0 && !flvPlayer && !isInitializing && !preparingStream &&
                 (now - autoPlayState.lastAttempt) > autoPlayState.cooldownPeriod) {
                 
                 console.log(`🎥 Auto-connecting to stream (${mode} mode)...`);
@@ -571,6 +642,11 @@ function checkAndAutoConnect() {
                 }, delay);
             }
             
+            // 次の配信は別の機材かもしれないので H.265 の直接再生をもう一度試す
+            if (streams.length === 0) {
+                hevcDirectFailed = false;
+            }
+
             // ストリームがなくなったらプレイヤーを停止
             if (streams.length === 0 && flvPlayer) {
                 console.log('❌ No streams available, stopping player');
