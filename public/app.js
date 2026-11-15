@@ -104,25 +104,8 @@ async function playStream() {
     
     // Parse mode selection
     if (mode === 'original') {
-        // Standard original quality - use the actual working path
-        newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
-
-        sourceCodecs = await fetchSourceCodecs(currentStreamKey);
-        debugLog(`Source codecs: video=${sourceCodecs.video || '?'} audio=${sourceCodecs.audio || '?'}`, 'info');
-        if (sourceCodecs.video === 'H265' && (hevcDirectFailed || !mpegts.getFeatureList().mseH265Playback)) {
-            updateStatus(t('hevcConverting'), 'connecting');
-            if (!await startCompatStreamWithCheck(currentStreamKey)) {
-                updateStatus(t('hevcConvertFailed'), 'error');
-                return;
-            }
-            newStreamUrl = `http://${window.location.hostname}:8000/live/${currentStreamKey}_h264.flv`;
-        }
-        debugLog(`Using original quality stream: ${newStreamUrl}`, 'info');
-        
         // Start stream immediately for original
-        setTimeout(() => {
-            startNewStream(newStreamUrl);
-        }, 200);
+        await playOriginalStream(200);
     } else {
         // Parse mode: low_720p, low_480p
         const [latencyType, resolution] = mode.split('_');
@@ -144,10 +127,7 @@ async function playStream() {
                 debugLog('Low latency mode failed, falling back to original stream', 'warning');
                 updateStatus(t('error') + ' - ' + t('standardQuality'), 'warning');
                 
-                newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
-                setTimeout(() => {
-                    startNewStream(newStreamUrl);
-                }, 500);
+                await playOriginalStream(500);
             }
         } catch (error) {
             console.error('Failed to start latency mode:', error);
@@ -155,12 +135,31 @@ async function playStream() {
             updateStatus(t('error') + ' - ' + t('standardQuality'), 'error');
             
             // Fallback to original stream
-            newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
-            setTimeout(() => {
-                startNewStream(newStreamUrl);
-            }, 500);
+            await playOriginalStream(500);
         }
     }
+}
+
+// Standard quality: the source stream, or its H.264 copy when the source is H.265 and this PC cannot play it
+async function playOriginalStream(delay) {
+    // Standard original quality - use the actual working path
+    let url = `http://${window.location.hostname}:8000/live/${currentStreamKey}.flv`;
+
+    sourceCodecs = await fetchSourceCodecs(currentStreamKey);
+    debugLog(`Source codecs: video=${sourceCodecs.video || '?'} audio=${sourceCodecs.audio || '?'}`, 'info');
+    if (sourceCodecs.video === 'H265' && (hevcDirectFailed || !mpegts.getFeatureList().mseH265Playback)) {
+        updateStatus(t('hevcConverting'), 'connecting');
+        if (!await startCompatStreamWithCheck(currentStreamKey)) {
+            updateStatus(t('hevcConvertFailed'), 'error');
+            return;
+        }
+        url = `http://${window.location.hostname}:8000/live/${currentStreamKey}_h264.flv`;
+    }
+    debugLog(`Using original quality stream: ${url}`, 'info');
+
+    setTimeout(() => {
+        startNewStream(url);
+    }, delay);
 }
 
 // Force reset player - enhanced cleanup
@@ -289,11 +288,11 @@ function createNewPlayer() {
 
             // The platform reported H.265 support but could not play it: switch to the H.264 copy once
             if (errorType === mpegts.ErrorTypes.MEDIA_ERROR && sourceCodecs.video === 'H265' &&
-                !hevcDirectFailed && modeSelect && modeSelect.value === 'original' && !streamUrl.includes('_h264.flv')) {
+                !hevcDirectFailed && streamUrl.endsWith(`/live/${currentStreamKey}.flv`)) {
                 hevcDirectFailed = true;
                 debugLog('H.265 direct playback failed - switching to H.264 conversion', 'warning');
                 forceResetPlayer();
-                setTimeout(() => playStream(), 500);
+                setTimeout(() => playOriginalStream(0), 500);
                 return;
             }
 

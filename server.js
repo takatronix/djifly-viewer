@@ -551,6 +551,11 @@ function startStandardResolutionStream(streamKey, resolution) {
   });
 }
 
+// In the packaged app ffmpeg-static points into app.asar, which spawn() cannot run (ENOTDIR);
+// asarUnpack puts the binary in app.asar.unpacked. Only the H.264 copy uses this path for now:
+// switching the 720p/480p conversions too would change what those modes do in installed builds.
+const spawnableFfmpegPath = ffmpegPath.replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
+
 // H.264 copy of an H.265 source at the source size, for players without an H.265 decoder
 function startCompatStream(streamKey) {
   const processKey = `${streamKey}_h264`;
@@ -575,7 +580,7 @@ function startCompatStream(streamKey) {
   ];
 
   addLog('info', `H.264変換開始: ${streamKey} → ${processKey}`);
-  const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);
+  const ffmpegProcess = spawn(spawnableFfmpegPath, ffmpegArgs);
   input.attach(ffmpegProcess);
 
   ffmpegProcess.stderr.on('data', (data) => {
