@@ -18,6 +18,12 @@ let autoConnectEnabled = true;
 let streamUrl = 'http://localhost:8000/live/s.flv';
 let lastStreamCount = 0;
 
+// H.265 (e.g. Osmo Pocket 4) plays directly where the platform has an HEVC decoder,
+// otherwise through an H.264 copy made on this PC (server: /api/stream/compat)
+let sourceCodecs = { video: '', audio: '' };
+let hevcDirectFailed = false;
+let preparingStream = false;
+
 // シンプルな自動再生制御
 let autoPlayState = {
     lastAttempt: 0,
@@ -40,23 +46,23 @@ function debugLog(message, type = 'info') {
     }
 }
 
-// Check if flv.js is available
+// Check if mpegts.js (flv.js successor, adds H.265/HEVC) is available
 function checkFlvJsAvailability() {
-    if (typeof flvjs === 'undefined') {
-        console.error('❌ flv.js is not available');
+    if (typeof mpegts === 'undefined') {
+        console.error('❌ mpegts.js is not available');
         debugLog(t('flvLibraryError'), 'error');
         updateStatus(t('flvLibraryError'), 'error');
         return false;
     }
     
-    if (!flvjs.isSupported()) {
-        console.error('❌ flv.js is not supported in this browser');
+    if (!mpegts.isSupported()) {
+        console.error('❌ mpegts.js is not supported in this browser');
         debugLog(t('browserNotSupported'), 'error');
         updateStatus(t('browserNotSupported'), 'error');
         return false;
     }
     
-    console.log('✅ flv.js is available and supported');
+    console.log('✅ mpegts.js is available and supported');
     debugLog(t('flvLibraryAvailable'), 'success');
     return true;
 }
@@ -98,14 +104,8 @@ async function playStream() {
     
     // Parse mode selection
     if (mode === 'original') {
-        // Standard original quality - use the actual working path
-        newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
-        debugLog(`Using original quality stream: ${newStreamUrl}`, 'info');
-        
         // Start stream immediately for original
-        setTimeout(() => {
-            startNewStream(newStreamUrl);
-        }, 200);
+        await playOriginalStream(200);
     } else {
         // Parse mode: low_720p, low_480p
         const [latencyType, resolution] = mode.split('_');
@@ -127,10 +127,7 @@ async function playStream() {
                 debugLog('Low latency mode failed, falling back to original stream', 'warning');
                 updateStatus(t('error') + ' - ' + t('standardQuality'), 'warning');
                 
-                newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
-                setTimeout(() => {
-                    startNewStream(newStreamUrl);
-                }, 500);
+                await playOriginalStream(500);
             }
         } catch (error) {
             console.error('Failed to start latency mode:', error);
@@ -138,12 +135,31 @@ async function playStream() {
             updateStatus(t('error') + ' - ' + t('standardQuality'), 'error');
             
             // Fallback to original stream
-            newStreamUrl = `http://${window.location.hostname}:8000/live/s.flv`;
-            setTimeout(() => {
-                startNewStream(newStreamUrl);
-            }, 500);
+            await playOriginalStream(500);
         }
     }
+}
+
+// Standard quality: the source stream, or its H.264 copy when the source is H.265 and this PC cannot play it
+async function playOriginalStream(delay) {
+    // Standard original quality - use the actual working path
+    let url = `http://${window.location.hostname}:8000/live/${currentStreamKey}.flv`;
+
+    sourceCodecs = await fetchSourceCodecs(currentStreamKey);
+    debugLog(`Source codecs: video=${sourceCodecs.video || '?'} audio=${sourceCodecs.audio || '?'}`, 'info');
+    if (sourceCodecs.video === 'H265' && (hevcDirectFailed || !mpegts.getFeatureList().mseH265Playback)) {
+        updateStatus(t('hevcConverting'), 'connecting');
+        if (!await startCompatStreamWithCheck(currentStreamKey)) {
+            updateStatus(t('hevcConvertFailed'), 'error');
+            return;
+        }
+        url = `http://${window.location.hostname}:8000/live/${currentStreamKey}_h264.flv`;
+    }
+    debugLog(`Using original quality stream: ${url}`, 'info');
+
+    setTimeout(() => {
+        startNewStream(url);
+    }, delay);
 }
 
 // Force reset player - enhanced cleanup
@@ -225,7 +241,7 @@ function createNewPlayer() {
     
     // 基本的なチェック
     if (!checkFlvJsAvailability()) {
-        debugLog('flv.js not available, aborting', 'error');
+        debugLog('mpegts.js not available, aborting', 'error');
         isInitializing = false;
         return;
     }
@@ -248,10 +264,10 @@ function createNewPlayer() {
     updateStatus(t('playerInitializing'), '');
     
     try {
-        // シンプルなflv.js プレイヤー作成
-        debugLog('Creating simple flv.js player...', 'info');
+        // シンプルなmpegts.js プレイヤー作成
+        debugLog('Creating simple mpegts.js player...', 'info');
         
-        flvPlayer = flvjs.createPlayer({
+        flvPlayer = mpegts.createPlayer({
             type: 'flv',
             url: streamUrl,
             isLive: true
@@ -261,15 +277,30 @@ function createNewPlayer() {
         window.flvPlayer = flvPlayer;
         
         if (!flvPlayer) {
-            throw new Error('flvjs.createPlayer returned null');
+            throw new Error('mpegts.createPlayer returned null');
         }
         
         debugLog('Player created successfully', 'success');
         
         // 最小限のエラーハンドリング（再試行を無効化）
-        flvPlayer.on(flvjs.Events.ERROR, (errorType, errorDetail, errorInfo) => {
+        flvPlayer.on(mpegts.Events.ERROR, (errorType, errorDetail, errorInfo) => {
             debugLog(`Player error: ${errorType} - ${errorDetail}`, 'error');
-            updateStatus(`${t('error')}: ${errorDetail}`, 'error');
+
+            // The platform reported H.265 support but could not play it: switch to the H.264 copy once
+            if (errorType === mpegts.ErrorTypes.MEDIA_ERROR && sourceCodecs.video === 'H265' &&
+                !hevcDirectFailed && streamUrl.endsWith(`/live/${currentStreamKey}.flv`)) {
+                hevcDirectFailed = true;
+                debugLog('H.265 direct playback failed - switching to H.264 conversion', 'warning');
+                forceResetPlayer();
+                setTimeout(() => playOriginalStream(0), 500);
+                return;
+            }
+
+            if (errorDetail === mpegts.ErrorDetails.MEDIA_CODEC_UNSUPPORTED) {
+                updateStatus(`${t('codecUnsupported')} (video: ${sourceCodecs.video || '?'}, audio: ${sourceCodecs.audio || '?'})`, 'error');
+            } else {
+                updateStatus(`${t('error')}: ${errorDetail}`, 'error');
+            }
             
             // 再試行ロジックを完全に無効化 - 無限ループの原因
             debugLog('Error occurred - stopping player (no retry)', 'warning');
@@ -277,8 +308,8 @@ function createNewPlayer() {
             
             // // 標準品質モードでのみリトライを許可
             // if (modeSelect && modeSelect.value === 'original' && 
-            //     (errorType === flvjs.ErrorTypes.NETWORK_ERROR || 
-            //      errorType === flvjs.ErrorTypes.MEDIA_ERROR)) {
+            //     (errorType === mpegts.ErrorTypes.NETWORK_ERROR || 
+            //      errorType === mpegts.ErrorTypes.MEDIA_ERROR)) {
             //     
             //     if (retryCount < MAX_RETRY) {
             //         retryCount++;
@@ -301,7 +332,7 @@ function createNewPlayer() {
         });
         
         // メタデータ受信時の処理
-        flvPlayer.on(flvjs.Events.METADATA_ARRIVED, (metadata) => {
+        flvPlayer.on(mpegts.Events.METADATA_ARRIVED, (metadata) => {
             debugLog('Metadata arrived - starting playback', 'success');
             updateStatus(t('metadataReceived'), 'connected');
             
@@ -310,7 +341,7 @@ function createNewPlayer() {
                 if (flvPlayer) {
                     flvPlayer.play().then(() => {
                         debugLog('Auto-play started', 'success');
-                        updateStatus(t('streaming'), 'connected');
+                        updateStatus(t('streaming') + (streamUrl.includes('_h264.flv') ? ' (H.265 → H.264)' : ''), 'connected');
                     }).catch(err => {
                         debugLog(`Auto-play failed: ${err.message}`, 'warning');
                         updateStatus(t('autoplayFailed'), '');
@@ -320,7 +351,7 @@ function createNewPlayer() {
         });
         
         // 読み込み完了
-        flvPlayer.on(flvjs.Events.LOADING_COMPLETE, () => {
+        flvPlayer.on(mpegts.Events.LOADING_COMPLETE, () => {
             debugLog('Loading complete', 'success');
             updateStatus(t('loadingComplete'), 'connected');
             retryCount = 0;
@@ -447,6 +478,45 @@ async function startLatencyModeWithCheck(streamKey, resolution) {
 
 // Legacy low latency function removed - replaced with startLatencyModeWithCheck
 
+async function fetchSourceCodecs(streamKey) {
+    try {
+        const streams = await (await fetch('/api/streams')).json();
+        const source = streams.find(s => s.stream === streamKey);
+        return { video: (source && source.videoCodec) || '', audio: (source && source.audioCodec) || '' };
+    } catch (error) {
+        debugLog(`Failed to read source codecs: ${error.message}`, 'warning');
+        return { video: '', audio: '' };
+    }
+}
+
+// Start the H.264 copy of an H.265 source and wait until it is published (max 30s)
+async function startCompatStreamWithCheck(streamKey) {
+    const compatKey = `${streamKey}_h264`;
+    preparingStream = true;
+    try {
+        const response = await fetch(`/api/stream/compat/${streamKey}`, { method: 'POST' });
+        if (!response.ok) {
+            debugLog(`H.264 conversion API failed: ${response.status}`, 'error');
+            return false;
+        }
+        for (let i = 0; i < 60; i++) {
+            const streams = await (await fetch('/api/streams')).json();
+            if (streams.some(s => s.stream === compatKey)) {
+                debugLog(`H.264 conversion ready: ${compatKey}`, 'success');
+                return true;
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        debugLog(`H.264 conversion did not start: ${compatKey}`, 'error');
+        return false;
+    } catch (error) {
+        debugLog(`H.264 conversion failed: ${error.message}`, 'error');
+        return false;
+    } finally {
+        preparingStream = false;
+    }
+}
+
 async function stopLowLatency(streamKey) {
     try {
         const response = await fetch(`/api/stream/stop-low-latency/${streamKey}`, {
@@ -557,7 +627,7 @@ function checkAndAutoConnect() {
             
             // ストリームがあり、プレイヤーがなく、クールダウン期間を過ぎている場合のみ再生
             const now = Date.now();
-            if (streams.length > 0 && !flvPlayer && !isInitializing && 
+            if (streams.length > 0 && !flvPlayer && !isInitializing && !preparingStream &&
                 (now - autoPlayState.lastAttempt) > autoPlayState.cooldownPeriod) {
                 
                 console.log(`🎥 Auto-connecting to stream (${mode} mode)...`);
@@ -571,6 +641,11 @@ function checkAndAutoConnect() {
                 }, delay);
             }
             
+            // 次の配信は別の機材かもしれないので H.265 の直接再生をもう一度試す
+            if (streams.length === 0) {
+                hevcDirectFailed = false;
+            }
+
             // ストリームがなくなったらプレイヤーを停止
             if (streams.length === 0 && flvPlayer) {
                 console.log('❌ No streams available, stopping player');
@@ -872,7 +947,7 @@ window.playStream = playStream;
 // const urlParams = new URLSearchParams(window.location.search);
 // const autoPlay = urlParams.get('autoplay');
 // if (autoPlay === 'true') {
-//     // Wait for flv.js to load before auto-playing
+//     // Wait for mpegts.js to load before auto-playing
 //     setTimeout(() => {
 //         if (checkFlvJsAvailability()) {
 //             playStream();

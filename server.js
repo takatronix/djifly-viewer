@@ -1,6 +1,8 @@
 const NodeMediaServer = require('node-media-server');
 const express = require('express');
 const path = require('path');
+const http = require('http');
+const { Transform } = require('stream');
 const { spawn } = require('child_process');
 
 // Get bundled FFmpeg path
@@ -39,6 +41,10 @@ const config = {
 };
 
 const nms = new NodeMediaServer(config);
+
+// FFmpeg reaches the local server by IP: the static Linux FFmpeg build crashes resolving "localhost".
+const LOCAL_RTMP = 'rtmp://127.0.0.1:1935/live';
+const LOCAL_HTTP_FLV = 'http://127.0.0.1:8000/live';
 
 const app = express();
 app.use(express.json());
@@ -95,6 +101,93 @@ const EXTREME_LOW_LATENCY_PRESETS = {
 };
 
 
+// Codec names node-media-server detected for a published stream ('H264', 'H265', 'AAC', ...)
+function getSourceCodecs(streamKey) {
+  const info = activeStreams.get(streamKey);
+  const session = info && nms.getSession(info.id);
+  return {
+    video: (session && session.videoCodecName) || '',
+    audio: (session && session.audioCodecName) || ''
+  };
+}
+
+// node-media-server 2.x stores H.265 as legacy FLV codec id 12 (it rewrites Enhanced RTMP 'hvc1',
+// as sent by e.g. Osmo Pocket 4). The bundled FFmpeg (6.1 on Windows, 7.0 on Linux) cannot open
+// codec id 12 but reads Enhanced FLV, so H.265 tags are re-wrapped back to 'hvc1' before FFmpeg sees them.
+const FOURCC_HVC1 = Buffer.from('hvc1');
+
+function legacyHevcToEnhanced(data) {
+  // legacy: [frameType<<4 | 12][packetType][compositionTime x3][payload]
+  const frameType = (data[0] >> 4) & 0x07;
+  const packetType = data[1]; // 0 = decoder config, 1 = coded frames, 2 = end of sequence
+  if (packetType === 1) {
+    // ExVideoTagHeader PacketTypeCodedFrames keeps the composition time
+    return Buffer.concat([Buffer.from([0x80 | (frameType << 4) | 1]), FOURCC_HVC1, data.subarray(2)]);
+  }
+  // PacketTypeSequenceStart / PacketTypeSequenceEnd have no composition time
+  return Buffer.concat([Buffer.from([0x80 | (frameType << 4) | packetType]), FOURCC_HVC1, data.subarray(5)]);
+}
+
+function createEnhancedHevcRewriter() {
+  let pending = Buffer.alloc(0);
+  let headerDone = false;
+  return new Transform({
+    transform(chunk, _encoding, done) {
+      let buf = pending.length ? Buffer.concat([pending, chunk]) : chunk;
+      if (!headerDone) {
+        if (buf.length < 13) { // FLV header + PreviousTagSize0
+          pending = buf;
+          return done();
+        }
+        this.push(buf.subarray(0, 13));
+        buf = buf.subarray(13);
+        headerDone = true;
+      }
+      while (buf.length >= 11) {
+        const dataSize = buf.readUIntBE(1, 3);
+        const total = 11 + dataSize + 4;
+        if (buf.length < total) break;
+        const data = buf.subarray(11, 11 + dataSize);
+        if ((buf[0] & 0x1f) === 9 && dataSize >= 5 && (data[0] & 0x8f) === 12) {
+          const out = legacyHevcToEnhanced(data);
+          const header = Buffer.from(buf.subarray(0, 11));
+          header.writeUIntBE(out.length, 1, 3);
+          const previousTagSize = Buffer.alloc(4);
+          previousTagSize.writeUInt32BE(11 + out.length);
+          this.push(Buffer.concat([header, out, previousTagSize]));
+        } else {
+          this.push(Buffer.from(buf.subarray(0, total)));
+        }
+        buf = buf.subarray(total);
+      }
+      pending = Buffer.from(buf);
+      done();
+    }
+  });
+}
+
+// FFmpeg input for a published stream: RTMP as before, or re-wrapped HTTP-FLV on stdin for H.265.
+function sourceInput(streamKey) {
+  if (getSourceCodecs(streamKey).video !== 'H265') {
+    return { args: ['-i', `${LOCAL_RTMP}/${streamKey}`], attach() {} };
+  }
+  return {
+    args: ['-f', 'flv', '-i', 'pipe:0'],
+    attach(ffmpegProcess) {
+      addLog('info', `${streamKey}: H.265 source - feeding FFmpeg as Enhanced FLV`);
+      ffmpegProcess.stdin.on('error', () => {}); // EPIPE once FFmpeg exits
+      const req = http.get(`${LOCAL_HTTP_FLV}/${streamKey}.flv`, (res) => {
+        res.pipe(createEnhancedHevcRewriter()).pipe(ffmpegProcess.stdin);
+      });
+      req.on('error', (error) => {
+        addLog('error', `${streamKey}: H.265 source read failed - ${error.message}`);
+        ffmpegProcess.stdin.end();
+      });
+      ffmpegProcess.on('close', () => req.destroy());
+    }
+  };
+}
+
 // Start low-latency stream with resolution conversion
 function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, extremeMode = false) {
   // Create unique process key to prevent conflicts
@@ -118,12 +211,12 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
     throw new Error(`Invalid resolution preset: ${resolution}`);
   }
 
-  const inputUrl = `rtmp://localhost:1935/live/${streamKey}`;  // DJIとOBS両方に対応
-  const outputUrl = `rtmp://localhost:1935/live/${processKey}`;
+  const input = sourceInput(streamKey);  // DJIとOBS両方に対応
+  const outputUrl = `${LOCAL_RTMP}/${processKey}`;
 
   // Simplified FFmpeg arguments for better compatibility
   const ffmpegArgs = [
-    '-i', inputUrl,
+    ...input.args,
     '-c:v', 'libx264',
     '-preset', 'ultrafast',
     '-tune', 'zerolatency',
@@ -133,6 +226,7 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
     '-g', '30',
     '-r', preset.fps.toString(),
     '-s', `${preset.width}x${preset.height}`,
+    '-pix_fmt', 'yuv420p',  // 10-bit sources would otherwise give High 10, which browsers cannot play
     '-c:a', 'aac',
     '-b:a', '64k',
     '-f', 'flv'
@@ -168,6 +262,7 @@ function startLowLatencyStream(streamKey, resolution, ultraLowLatency = false, e
     stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env
   });
+  input.attach(ffmpegProcess);
   
   ffmpegProcess.stdout.on('data', (data) => {
     console.log(`[${processKey}] STDOUT: ${data}`);
@@ -237,10 +332,13 @@ app.get('/api/streams', (req, res) => {
   const streams = [];
   
   activeStreams.forEach((info, streamKey) => {
+    const codecs = getSourceCodecs(streamKey);
     streams.push({
       app: 'live',
       stream: streamKey,
-      viewers: info.viewers || 0
+      viewers: info.viewers || 0,
+      videoCodec: codecs.video,
+      audioCodec: codecs.audio
     });
   });
   
@@ -399,12 +497,12 @@ function startStandardResolutionStream(streamKey, resolution) {
     throw new Error(`Invalid resolution preset: ${resolution}`);
   }
 
-  const inputUrl = `rtmp://localhost:1935/live/${streamKey}`;
-  const outputUrl = `rtmp://localhost:1935/live/${streamKey}_${resolution}_standard`;
+  const input = sourceInput(streamKey);
+  const outputUrl = `${LOCAL_RTMP}/${streamKey}_${resolution}_standard`;
 
   // Standard quality FFmpeg arguments
   const ffmpegArgs = [
-    '-i', inputUrl,
+    ...input.args,
     '-c:v', 'libx264',
     '-preset', 'medium',  // Better quality than ultrafast
     '-crf', '20',         // Higher quality than low latency
@@ -414,6 +512,7 @@ function startStandardResolutionStream(streamKey, resolution) {
     '-keyint_min', '60',
     '-r', preset.fps.toString(),
     '-s', `${preset.width}x${preset.height}`,
+    '-pix_fmt', 'yuv420p',
     '-c:a', 'aac',
     '-b:a', '128k',
     '-ar', '44100',
@@ -424,6 +523,7 @@ function startStandardResolutionStream(streamKey, resolution) {
   console.log(`Starting standard resolution stream: ${streamKey} → ${resolution}`);
   
   const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);
+  input.attach(ffmpegProcess);
   
   ffmpegProcess.stdout.on('data', (data) => {
     console.log(`Standard ${streamKey}: ${data}`);
@@ -450,6 +550,77 @@ function startStandardResolutionStream(streamKey, resolution) {
     type: 'standard'
   });
 }
+
+// In the packaged app ffmpeg-static points into app.asar, which spawn() cannot run (ENOTDIR);
+// asarUnpack puts the binary in app.asar.unpacked. Only the H.264 copy uses this path for now:
+// switching the 720p/480p conversions too would change what those modes do in installed builds.
+const spawnableFfmpegPath = ffmpegPath.replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
+
+// H.264 copy of an H.265 source at the source size, for players without an H.265 decoder
+function startCompatStream(streamKey) {
+  const processKey = `${streamKey}_h264`;
+
+  if (resolutionProcesses.has(processKey)) {
+    console.log(`H.264 compat stream already running for: ${streamKey}`);
+    return;
+  }
+
+  const input = sourceInput(streamKey);
+  const ffmpegArgs = [
+    ...input.args,
+    '-c:v', 'libx264',
+    '-preset', 'veryfast',
+    '-tune', 'zerolatency',
+    '-g', '60',
+    '-pix_fmt', 'yuv420p',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-f', 'flv',
+    `${LOCAL_RTMP}/${processKey}`
+  ];
+
+  addLog('info', `H.264変換開始: ${streamKey} → ${processKey}`);
+  const ffmpegProcess = spawn(spawnableFfmpegPath, ffmpegArgs);
+  input.attach(ffmpegProcess);
+
+  ffmpegProcess.stderr.on('data', (data) => {
+    console.log(`[${processKey}] STDERR: ${data}`);
+  });
+
+  ffmpegProcess.on('close', (code) => {
+    addLog(code ? 'error' : 'info', `H.264変換停止: ${processKey} (code: ${code})`);
+    resolutionProcesses.delete(processKey);
+  });
+
+  ffmpegProcess.on('error', (error) => {
+    addLog('error', `H.264変換エラー: ${processKey} - ${error.message}`);
+    resolutionProcesses.delete(processKey);
+  });
+
+  resolutionProcesses.set(processKey, {
+    process: ffmpegProcess,
+    resolution: 'source',
+    outputStream: processKey,
+    streamKey: streamKey,
+    type: 'compat'
+  });
+}
+
+// API endpoint to start the H.264 compat stream (stopped by stop-low-latency like the others)
+app.post('/api/stream/compat/:streamKey', (req, res) => {
+  const { streamKey } = req.params;
+
+  if (!activeStreams.has(streamKey)) {
+    return res.status(404).json({ error: 'Stream not found' });
+  }
+
+  try {
+    startCompatStream(streamKey);
+    res.json({ success: true, outputStream: `${streamKey}_h264` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get available resolution presets
 app.get('/api/resolutions', (req, res) => {
